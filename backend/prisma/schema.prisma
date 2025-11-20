@@ -24,7 +24,6 @@ model User {
   // Relations
   subscriptions Subscription[]
   payments      Payment[]
-  referrals     User[]       @relation("UserReferrals")
 
   @@map("users")
 }
