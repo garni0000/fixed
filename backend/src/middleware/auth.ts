@@ -1,17 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyFirebaseToken } from '../config/firebase.js';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { prisma } from '../server.js';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        uid: string;
-        email?: string;
-        email_verified: boolean;
-        name?: string;
-        picture?: string;
-      };
+      user?: DecodedIdToken;
       dbUser?: any;
     }
   }

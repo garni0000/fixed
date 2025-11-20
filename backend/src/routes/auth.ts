@@ -9,9 +9,14 @@ router.post('/register', authenticateToken, async (req, res) => {
   try {
     const { referralCode } = req.body;
 
+    const firebaseUser = req.user;
+    if (!firebaseUser || !firebaseUser.email) {
+      return res.status(400).json({ error: 'Firebase user email is required' });
+    }
+
     // Check if user already exists
     let user = await prisma.user.findUnique({
-      where: { firebaseId: req.user!.uid }
+      where: { firebaseId: firebaseUser.uid }
     });
 
     if (user) {
@@ -19,7 +24,7 @@ router.post('/register', authenticateToken, async (req, res) => {
     }
 
     // Handle referral
-    let referredBy = null;
+    let referredBy: string | null = null;
     if (referralCode) {
       const referrer = await prisma.user.findUnique({
         where: { referralCode }
@@ -29,13 +34,15 @@ router.post('/register', authenticateToken, async (req, res) => {
       }
     }
 
+    const displayName = firebaseUser.name || firebaseUser.email.split('@')[0];
+
     // Create new user
     user = await prisma.user.create({
       data: {
-        firebaseId: req.user!.uid,
-        email: req.user!.email,
-        displayName: req.user!.name || req.user!.email.split('@')[0],
-        photoURL: req.user!.picture,
+        firebaseId: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName,
+        photoURL: firebaseUser.picture,
         referredBy
       }
     });
