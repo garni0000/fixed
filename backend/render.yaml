@@ -2,14 +2,25 @@ services:
   - type: web
     name: fixed-pronos-backend
     env: node
-    runtime: "node"
     region: frankfurt
     plan: starter
+    preDeployCommand: "rm -f bun.lockb"
     buildCommand: |
-      npm install --production=false
+      echo "=== Forcing Node.js environment ==="
+      export PATH=/usr/local/bin:/usr/bin:/bin
+      which node && node --version
+      which npm && npm --version
+      echo "=== Installing dependencies ==="
+      npm ci --production=false
+      echo "=== Generating Prisma client ==="
       npx prisma generate
+      echo "=== Running migrations ==="
       npx prisma migrate deploy --schema=./prisma/schema.prisma
-      npx tsc --project tsconfig.json
+      echo "=== Compiling TypeScript ==="
+      npx tsc --project tsconfig.json --outDir dist
+      echo "=== Checking dist directory ==="
+      ls -la dist/
+      echo "=== Build completed ==="
     startCommand: node dist/server.js
     envVars:
       - key: NODE_ENV

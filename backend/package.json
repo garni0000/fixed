@@ -6,14 +6,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc --outDir dist",
     "start": "node dist/server.js",
     "postinstall": "prisma generate",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate",
     "studio": "prisma studio",
-    "render-build": "npm run generate && npm run migrate:deploy && npm run build"
+    "render-build": "echo 'Starting render build...' && npm run generate && npm run migrate:deploy && npm run build && echo 'Build completed successfully' && ls -la dist/"
+  },
+  "engines": {
+    "node": "18.17.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
