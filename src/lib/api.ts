@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { auth } from './firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import pronosMock from '@/mocks/pronos.json';
 import userMock from '@/mocks/user.json';
 
