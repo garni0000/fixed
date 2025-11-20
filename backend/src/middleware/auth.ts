@@ -7,7 +7,7 @@ declare global {
     interface Request {
       user?: {
         uid: string;
-        email: string;
+        email?: string;
         email_verified: boolean;
         name?: string;
         picture?: string;
@@ -69,7 +69,7 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
       return res.status(500).json({ error: 'Admin email not configured' });
     }
 
-    if (req.user.email !== adminEmail) {
+    if (!req.user.email || req.user.email !== adminEmail) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 

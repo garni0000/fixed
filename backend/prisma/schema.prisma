@@ -24,6 +24,8 @@ model User {
   // Relations
   subscriptions Subscription[]
   payments      Payment[]
+  referrer      User?      @relation("UserReferrals", fields: [referredBy], references: [id])
+  referrals     User[]     @relation("UserReferrals")
 
   @@map("users")
 }
