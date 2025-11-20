@@ -7,14 +7,12 @@ RUN apk add --no-cache bash curl
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and Prisma schema
 COPY package*.json ./
+COPY prisma ./prisma/
 
 # Install dependencies
 RUN npm install
-
-# Copy prisma schema
-COPY prisma ./prisma/
 
 # Generate Prisma client
 RUN npx prisma generate
