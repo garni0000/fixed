@@ -1,27 +1,33 @@
 services:
   - type: web
     name: fixed-pronos-backend
-    env: node
+    env: docker
     region: frankfurt
     plan: starter
-    preDeployCommand: "rm -f bun.lockb"
-    buildCommand: |
-      echo "=== Forcing Node.js environment ==="
-      export PATH=/usr/local/bin:/usr/bin:/bin
-      which node && node --version
-      which npm && npm --version
-      echo "=== Installing dependencies ==="
-      npm ci --production=false
-      echo "=== Generating Prisma client ==="
-      npx prisma generate
-      echo "=== Running migrations ==="
-      npx prisma migrate deploy --schema=./prisma/schema.prisma
-      echo "=== Compiling TypeScript ==="
-      npx tsc --project tsconfig.json --outDir dist
-      echo "=== Checking dist directory ==="
-      ls -la dist/
-      echo "=== Build completed ==="
-    startCommand: node dist/server.js
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: UPLOAD_PATH
+        value: ./uploads
+    healthCheckPath: /health
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
