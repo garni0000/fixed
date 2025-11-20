@@ -8,10 +8,12 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "postinstall": "prisma generate",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "render-build": "npm run generate && npm run migrate:deploy && npm run build"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
