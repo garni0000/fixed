@@ -116,9 +116,10 @@ export const useSupabaseAuth = () => {
     
     if (data.user) {
       await loadUserProfile(data.user);
+      return { success: true };
     }
 
-    return data;
+    throw new Error('Registration failed');
   };
 
   const login = async (email: string, password: string) => {
@@ -131,9 +132,10 @@ export const useSupabaseAuth = () => {
 
     if (data.user) {
       await loadUserProfile(data.user);
+      return { success: true };
     }
 
-    return data;
+    throw new Error('Login failed');
   };
 
   const logout = async () => {
