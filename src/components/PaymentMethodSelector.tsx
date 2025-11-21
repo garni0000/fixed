@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { supabaseAdminService } from '@/lib/supabase-services';
 
 interface Plan {
   id: string;
@@ -36,50 +38,81 @@ export default function PaymentMethodSelector({
   const [notes, setNotes] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
 
   const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour soumettre un paiement",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
-    // Validation
-    if (paymentMethod === 'crypto' && !cryptoAddress.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez saisir l'adresse crypto",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      return;
-    }
+    try {
+      // Validation
+      if (paymentMethod === 'crypto' && !cryptoAddress.trim()) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez saisir l'adresse crypto",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    if (paymentMethod === 'mobile_money' && !mobileNumber.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez saisir le numéro de téléphone",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      return;
-    }
+      if (paymentMethod === 'mobile_money' && !mobileNumber.trim()) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez saisir le numéro de téléphone",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    if (!proofFile) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez télécharger une preuve de paiement",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      return;
-    }
+      if (!proofFile) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez télécharger une preuve de paiement",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    // Simulate API call to submit payment
-    setTimeout(() => {
+      // Submit payment to Supabase
+      await supabaseAdminService.submitPayment({
+        userId: user.id,
+        amount: parseFloat(selectedPlan.price),
+        method: paymentMethod as 'crypto' | 'mobile_money',
+        cryptoAddress: paymentMethod === 'crypto' ? cryptoAddress : undefined,
+        cryptoTxHash: paymentMethod === 'crypto' ? cryptoTxHash : undefined,
+        mobileNumber: paymentMethod === 'mobile_money' ? mobileNumber : undefined,
+        mobileProvider: paymentMethod === 'mobile_money' ? mobileProvider : undefined,
+        notes,
+        proofFile,
+      });
+
       toast({
         title: "Paiement soumis",
         description: "Votre demande de paiement a été soumise et sera traitée sous 24h",
       });
+      
       onPaymentComplete(paymentMethod);
+    } catch (error) {
+      console.error('Payment submission error:', error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de la soumission du paiement",
+        variant: "destructive",
+      });
+    } finally {
       setIsProcessing(false);
-    }, 1500);
+    }
   };
 
   return (

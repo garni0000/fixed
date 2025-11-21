@@ -411,4 +411,72 @@ export const supabaseAdminService = {
       throw error;
     }
   },
+
+  // Submit payment request with proof image
+  submitPayment: async (paymentData: {
+    userId: string;
+    amount: number;
+    method: 'crypto' | 'mobile_money' | 'bank_transfer';
+    cryptoAddress?: string;
+    cryptoTxHash?: string;
+    mobileNumber?: string;
+    mobileProvider?: string;
+    notes?: string;
+    proofFile?: File;
+  }) => {
+    try {
+      let proofImageUrl: string | null = null;
+
+      // Upload proof image to Supabase Storage if provided
+      if (paymentData.proofFile) {
+        const fileExt = paymentData.proofFile.name.split('.').pop();
+        const fileName = `${paymentData.userId}-${Date.now()}.${fileExt}`;
+        const filePath = `payment-proofs/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(filePath, paymentData.proofFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Error uploading proof image:', uploadError);
+          throw new Error('Erreur lors de l\'upload de la preuve de paiement');
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(filePath);
+
+        proofImageUrl = publicUrl;
+      }
+
+      // Create payment record
+      const { data, error } = await supabase
+        .from('payments')
+        .insert([{
+          user_id: paymentData.userId,
+          amount: paymentData.amount,
+          currency: 'EUR',
+          method: paymentData.method,
+          crypto_address: paymentData.cryptoAddress,
+          crypto_tx_hash: paymentData.cryptoTxHash,
+          mobile_number: paymentData.mobileNumber,
+          mobile_provider: paymentData.mobileProvider,
+          notes: paymentData.notes,
+          proof_image_url: proofImageUrl,
+          status: 'pending',
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data };
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      throw error;
+    }
+  },
 };
