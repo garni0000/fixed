@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2, Plus, Edit, Trash2, Users, TrendingUp, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, Users, TrendingUp, DollarSign, CreditCard, Check, X, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function Admin() {
@@ -41,9 +41,20 @@ export default function Admin() {
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [userSubForm, setUserSubForm] = useState({ plan: 'basic', duration: '1' });
 
+  // Payments
+  const [payments, setPayments] = useState<any[]>([]);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
   useEffect(() => {
     checkAdminAccess();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'pronos' && isAdmin) loadPronos();
+    if (activeTab === 'users' && isAdmin) loadUsers();
+    if (activeTab === 'payments' && isAdmin) loadPayments();
+  }, [activeTab, isAdmin]);
 
   const checkAdminAccess = async () => {
     try {
@@ -158,10 +169,77 @@ export default function Admin() {
     }
   };
 
-  useEffect(() => {
-    if (isAdmin && activeTab === 'pronos') loadPronos();
-    if (isAdmin && activeTab === 'users') loadUsers();
-  }, [isAdmin, activeTab]);
+  const loadPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          profiles:user_id (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPayments(data || []);
+    } catch (error) {
+      console.error('Error loading payments:', error);
+      toast({ title: 'Erreur', description: 'Impossible de charger les paiements.', variant: 'destructive' });
+    }
+  };
+
+  const handleApprovePayment = async (paymentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('payments')
+        .update({
+          status: 'approved',
+          processed_by: user.id,
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Succès', description: 'Paiement approuvé avec succès.' });
+      loadPayments();
+      setIsPaymentDialogOpen(false);
+    } catch (error) {
+      console.error('Error approving payment:', error);
+      toast({ title: 'Erreur', description: 'Impossible d\'approuver le paiement.', variant: 'destructive' });
+    }
+  };
+
+  const handleRejectPayment = async (paymentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('payments')
+        .update({
+          status: 'rejected',
+          processed_by: user.id,
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Succès', description: 'Paiement rejeté.' });
+      loadPayments();
+      setIsPaymentDialogOpen(false);
+    } catch (error) {
+      console.error('Error rejecting payment:', error);
+      toast({ title: 'Erreur', description: 'Impossible de rejeter le paiement.', variant: 'destructive' });
+    }
+  };
 
   const handleSaveProno = async () => {
     try {
@@ -317,10 +395,11 @@ export default function Admin() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="pronos">Pronos</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
+            <TabsTrigger value="payments">Paiements</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-4">
@@ -617,6 +696,194 @@ export default function Admin() {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Demandes de Paiement</CardTitle>
+                <CardDescription>Gérer les demandes de retrait des utilisateurs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Utilisateur</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Méthode</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Aucune demande de paiement
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      payments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>
+                            {payment.profiles?.first_name} {payment.profiles?.last_name}
+                            <br />
+                            <span className="text-xs text-muted-foreground">{payment.profiles?.email}</span>
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {payment.amount} {payment.currency}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {payment.method === 'crypto' && '₿ Crypto'}
+                              {payment.method === 'mobile_money' && '📱 Mobile Money'}
+                              {payment.method === 'bank_transfer' && '🏦 Virement'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                payment.status === 'approved' ? 'default' : 
+                                payment.status === 'rejected' ? 'destructive' : 
+                                'secondary'
+                              }
+                            >
+                              {payment.status === 'pending' && 'En attente'}
+                              {payment.status === 'approved' && 'Approuvé'}
+                              {payment.status === 'rejected' && 'Rejeté'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(payment.created_at).toLocaleDateString('fr-FR')}
+                          </TableCell>
+                          <TableCell>
+                            <Dialog open={isPaymentDialogOpen && selectedPayment?.id === payment.id} onOpenChange={(open) => {
+                              setIsPaymentDialogOpen(open);
+                              if (open) setSelectedPayment(payment);
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline">Détails</Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Détails du Paiement</DialogTitle>
+                                  <DialogDescription>
+                                    Demande de {payment.profiles?.first_name} {payment.profiles?.last_name}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label className="text-sm text-muted-foreground">Montant</Label>
+                                      <p className="text-lg font-semibold">{payment.amount} {payment.currency}</p>
+                                    </div>
+                                    <div>
+                                      <Label className="text-sm text-muted-foreground">Méthode</Label>
+                                      <p className="text-lg">{payment.method}</p>
+                                    </div>
+                                  </div>
+
+                                  {payment.method === 'crypto' && (
+                                    <>
+                                      <div>
+                                        <Label className="text-sm text-muted-foreground">Adresse Crypto</Label>
+                                        <p className="font-mono text-sm break-all">{payment.crypto_address}</p>
+                                      </div>
+                                      {payment.crypto_tx_hash && (
+                                        <div>
+                                          <Label className="text-sm text-muted-foreground">Transaction Hash</Label>
+                                          <p className="font-mono text-sm break-all">{payment.crypto_tx_hash}</p>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {payment.method === 'mobile_money' && (
+                                    <>
+                                      <div>
+                                        <Label className="text-sm text-muted-foreground">Numéro Mobile</Label>
+                                        <p className="text-lg">{payment.mobile_number}</p>
+                                      </div>
+                                      <div>
+                                        <Label className="text-sm text-muted-foreground">Opérateur</Label>
+                                        <p className="text-lg">{payment.mobile_provider}</p>
+                                      </div>
+                                    </>
+                                  )}
+
+                                  {payment.notes && (
+                                    <div>
+                                      <Label className="text-sm text-muted-foreground">Notes</Label>
+                                      <p className="text-sm">{payment.notes}</p>
+                                    </div>
+                                  )}
+
+                                  {payment.proof_image_url && (
+                                    <div>
+                                      <Label className="text-sm text-muted-foreground mb-2 block">
+                                        Capture d'écran / Preuve de paiement
+                                      </Label>
+                                      <div className="border rounded-lg p-2 bg-card">
+                                        <img 
+                                          src={payment.proof_image_url} 
+                                          alt="Preuve de paiement" 
+                                          className="w-full rounded object-contain max-h-96"
+                                          onError={(e) => {
+                                            e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="%23666">Image non disponible</text></svg>';
+                                          }}
+                                        />
+                                        <a 
+                                          href={payment.proof_image_url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-sm text-primary hover:underline flex items-center gap-1 mt-2"
+                                        >
+                                          Ouvrir en grand <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {payment.status === 'pending' && (
+                                    <div className="flex gap-2 pt-4">
+                                      <Button 
+                                        onClick={() => handleApprovePayment(payment.id)}
+                                        className="flex-1"
+                                        variant="default"
+                                      >
+                                        <Check className="mr-2 h-4 w-4" />
+                                        Approuver
+                                      </Button>
+                                      <Button 
+                                        onClick={() => handleRejectPayment(payment.id)}
+                                        className="flex-1"
+                                        variant="destructive"
+                                      >
+                                        <X className="mr-2 h-4 w-4" />
+                                        Rejeter
+                                      </Button>
+                                    </div>
+                                  )}
+
+                                  {payment.status !== 'pending' && (
+                                    <div className="bg-muted p-4 rounded-lg">
+                                      <p className="text-sm text-muted-foreground">
+                                        Traité le {new Date(payment.processed_at).toLocaleString('fr-FR')}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
