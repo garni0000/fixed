@@ -5,7 +5,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 ## État Actuel (Migration complète vers Supabase)
 **Date de migration Firebase → Supabase**: 21 Novembre 2025  
-**Statut**: ✅ Migration terminée, en attente d'application des migrations SQL
+**Dernière mise à jour**: 21 Novembre 2025 - Migration système FREE/VIP  
+**Statut**: ✅ Application fonctionnelle avec système FREE/VIP
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
@@ -14,13 +15,19 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - Services Supabase créés pour remplacer l'API backend
 - Interface utilisateur complète avec Shadcn UI
 - Système de routing avec React Router
+- **Système FREE/VIP** : Pronos gratuits et pronos VIP pour abonnés
 - Toutes les dépendances installées
 
-### ⚠️ Actions requises
-- **Migrations SQL**: Vous devez appliquer les migrations dans votre tableau de bord Supabase
-  - Consultez `MIGRATION_SUPABASE.md` pour les instructions détaillées
-  - Fichiers à exécuter dans `supabase/migrations/`
-- **Rôle Admin**: Créer le premier compte admin via SQL après inscription
+### 🎯 Système de types de pronos (FREE / VIP)
+- **FREE** : Pronos gratuits accessibles à tous les utilisateurs
+- **VIP** : Pronos réservés aux utilisateurs avec abonnement actif
+- Le code gère automatiquement les anciens types (safe/risk → free)
+
+### ⚠️ Actions optionnelles
+- **Migration SQL types pronos**: Pour nettoyer les anciens types dans Supabase
+  - Consultez `GUIDE_MIGRATION_FREE_VIP.md` pour les instructions
+  - Script disponible : `MISE_A_JOUR_TYPES_PRONOS.sql`
+  - **Note**: Le frontend fonctionne déjà sans cette migration
 
 ## Architecture
 

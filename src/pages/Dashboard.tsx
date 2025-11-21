@@ -109,7 +109,7 @@ const Dashboard = () => {
                   prediction={prono.tip}
                   odds={prono.odd}
                   confidence={prono.confidence}
-                  type={prono.prono_type || 'safe'}
+                  type={prono.prono_type || 'free'}
                   status={prono.result || 'pending'}
                   result={null}
                 />

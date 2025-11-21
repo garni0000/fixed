@@ -30,7 +30,7 @@ export default function Admin() {
   const [pronos, setPronos] = useState<any[]>([]);
   const [pronoForm, setPronoForm] = useState({
     title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-    tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
+    tip: '', odd: '', confidence: '', prono_type: 'free', content: '', analysis: '', status: 'draft'
   });
   const [editingProno, setEditingProno] = useState<any>(null);
   const [isPronoDialogOpen, setIsPronoDialogOpen] = useState(false);
@@ -148,7 +148,7 @@ export default function Admin() {
         ...pronoForm,
         odd: parseFloat(pronoForm.odd),
         confidence: parseInt(pronoForm.confidence),
-        prono_type: pronoForm.prono_type as 'safe' | 'risk' | 'vip',
+        prono_type: pronoForm.prono_type as 'free' | 'vip',
         status: pronoForm.status as 'draft' | 'published' | 'archived',
         author_id: user.id,
         published_at: pronoForm.status === 'published' ? new Date().toISOString() : null
@@ -196,7 +196,7 @@ export default function Admin() {
   const resetPronoForm = () => {
     setPronoForm({
       title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-      tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
+      tip: '', odd: '', confidence: '', prono_type: 'free', content: '', analysis: '', status: 'draft'
     });
     setEditingProno(null);
   };
@@ -415,9 +415,8 @@ export default function Admin() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="safe">Safe</SelectItem>
-                                <SelectItem value="risk">Risk</SelectItem>
-                                <SelectItem value="vip">VIP</SelectItem>
+                                <SelectItem value="free">FREE (Gratuit)</SelectItem>
+                                <SelectItem value="vip">VIP (Abonnés)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

@@ -10,19 +10,22 @@ interface PronoCardProps {
   prediction: string;
   odds: number;
   confidence: number;
-  type: 'safe' | 'risk' | 'vip';
+  type: string;
   status: 'pending' | 'won' | 'lost';
   result?: string | null;
 }
 
 const PronoCard = ({ id, match, league, prediction, odds, confidence, type, status, result }: PronoCardProps) => {
-  const typeConfig = {
-    safe: { icon: Shield, label: 'SAFE', color: 'text-success' },
-    risk: { icon: Zap, label: 'RISK', color: 'text-destructive' },
+  // Mapper les anciens types vers les nouveaux
+  const normalizedType = (type === 'safe' || type === 'risk') ? 'free' : type;
+  
+  const typeConfig: Record<string, { icon: any; label: string; color: string }> = {
+    free: { icon: Shield, label: 'FREE', color: 'text-success' },
     vip: { icon: TrendingUp, label: 'VIP', color: 'text-primary' },
   };
 
-  const Icon = typeConfig[type].icon;
+  const config = typeConfig[normalizedType] || typeConfig.free;
+  const Icon = config.icon;
 
   return (
     <div className="card-premium p-6 hover:scale-[1.02] transition-transform duration-300">
@@ -31,9 +34,9 @@ const PronoCard = ({ id, match, league, prediction, odds, confidence, type, stat
           <h3 className="text-xl font-bold text-foreground mb-1">{match}</h3>
           <p className="text-sm text-muted-foreground">{league}</p>
         </div>
-        <Badge className={`${typeConfig[type].color} flex items-center gap-1`}>
+        <Badge className={`${config.color} flex items-center gap-1`}>
           <Icon size={14} />
-          {typeConfig[type].label}
+          {config.label}
         </Badge>
       </div>
 
