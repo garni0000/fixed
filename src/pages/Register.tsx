@@ -4,7 +4,7 @@ import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const Register = () => {
@@ -16,7 +16,7 @@ const Register = () => {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -38,13 +38,13 @@ const Register = () => {
       await register(formData.email, formData.password, formData.firstName, formData.lastName);
       toast({
         title: "Inscription réussie",
-        description: "Bienvenue dans la communauté VIP !",
+        description: "Bienvenue dans la communauté VIP ! Vérifiez votre email pour confirmer votre compte.",
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erreur d'inscription",
-        description: "Une erreur est survenue. Veuillez réessayer.",
+        description: error?.message || "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {

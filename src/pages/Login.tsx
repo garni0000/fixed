@@ -4,14 +4,14 @@ import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,10 +26,10 @@ const Login = () => {
         description: "Bienvenue sur FixedPronos !",
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erreur de connexion",
-        description: "Identifiants incorrects. Veuillez réessayer.",
+        description: error?.message || "Identifiants incorrects. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {

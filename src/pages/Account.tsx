@@ -2,12 +2,12 @@ import { Navigate } from 'react-router-dom';
 import { User, CreditCard, Shield, Calendar } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const Account = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useSupabaseAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" />;

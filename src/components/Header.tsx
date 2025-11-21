@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { Trophy, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useSupabaseAuth();
 
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-card/95">

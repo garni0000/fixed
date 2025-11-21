@@ -3,11 +3,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useSupabaseAuth();
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
 
