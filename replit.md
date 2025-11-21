@@ -1,102 +1,159 @@
-# FixedPronos - Replit Project
+# FixedPronos - Plateforme de Pronostics Sportifs
 
-## Overview
-This is a sports betting prediction platform (pronos) that has been migrated from Lovable to Replit. The application allows users to view betting predictions, subscribe to premium tiers, and earn commissions through a referral system.
+## Vue d'ensemble
+FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonnement et de parrainage. L'application utilise React/TypeScript pour le frontend, Firebase pour l'authentification, et Supabase comme base de données.
 
-## Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **UI Framework**: Tailwind CSS + shadcn/ui components
+## État Actuel (Migré depuis Lovable vers Replit)
+**Date de migration**: 21 Novembre 2025  
+**Statut**: ✅ Opérationnel
+
+### ✅ Fonctionnalités configurées
+- Frontend React + Vite fonctionnel sur port 5000
+- Firebase Authentication configuré avec credentials sécurisés
+- Supabase intégré pour la base de données
+- Interface utilisateur complète avec Shadcn UI
+- Système de routing avec React Router
+- Toutes les dépendances installées
+
+### ⚠️ Configuration requise
+- **VITE_API_URL**: Doit pointer vers le backend Render réel (actuellement en placeholder)
+- **Backend**: Nécessite un backend Node.js déployé sur Render pour les opérations complètes
+
+## Architecture
+
+### Frontend (Application React)
+- **Framework**: React 18 + TypeScript + Vite
+- **UI Components**: Shadcn UI (Radix UI + Tailwind CSS)
 - **Routing**: React Router v6
-- **State Management**: TanStack Query (React Query v5)
-- **Authentication**: Firebase Auth + Supabase
-- **Database**: Supabase (PostgreSQL)
-- **Icons**: Lucide React
+- **State Management**: TanStack Query (React Query)
+- **Styling**: Tailwind CSS avec thème personnalisé
 
-## Recent Changes (Migration to Replit)
-- **Date**: November 21, 2025
-- Configured Vite to run on port 5000 with host 0.0.0.0 (required for Replit webview)
-- Added `allowedHosts: true` to Vite config for proper iframe support
-- Installed Firebase package (was missing)
-- Updated .gitignore to protect environment files
-- Set up workflow to run development server on port 5000
+### Authentification
+- **Primary**: Firebase Authentication
+- **Secondary**: Supabase (base de données avec RLS)
+- Les deux systèmes coexistent - Firebase pour l'auth, Supabase pour les données
 
-## Project Structure
+### Base de données (Supabase)
+Tables principales:
+- `profiles` - Profils utilisateurs avec codes de parrainage
+- `user_roles` - Rôles (user/admin)
+- `subscriptions` - Abonnements (basic/pro/vip)
+- `pronos` - Pronostics sportifs
+- `transactions` - Historique des paiements
+- `referrals` - Système de parrainage
+
+## Structure du Projet
+
 ```
 /
-├── src/                    # Frontend source code
-│   ├── components/        # React components
-│   │   ├── ui/           # shadcn/ui components
-│   │   └── *.tsx         # Custom components
-│   ├── pages/            # Page components
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Utilities and API clients
-│   ├── integrations/     # Third-party integrations
-│   └── App.tsx           # Main app component
-├── supabase/             # Supabase configuration
-│   ├── migrations/       # Database migrations
-│   └── config.toml      # Supabase config
-├── backend/              # Separate backend service (not actively used)
-└── public/               # Static assets
+├── src/
+│   ├── components/        # Composants React réutilisables
+│   │   └── ui/           # Composants Shadcn UI
+│   ├── pages/            # Pages de l'application
+│   ├── hooks/            # Custom hooks (useAuth, usePronos)
+│   ├── lib/              # Utilitaires (API, Firebase, utils)
+│   ├── integrations/     # Intégrations (Supabase)
+│   └── mocks/            # Données de test
+├── supabase/
+│   └── migrations/       # Migrations SQL Supabase
+├── backend/              # Backend Node.js (à déployer sur Render)
+└── public/               # Assets statiques
 ```
 
-## User Preferences
-- None documented yet
+## Variables d'environnement
 
-## Environment Variables Required
+### Configurées via Replit Secrets
+- `VITE_FIREBASE_API_KEY` ✅
+- `VITE_FIREBASE_AUTH_DOMAIN` ✅
+- `VITE_FIREBASE_PROJECT_ID` ✅
+- `VITE_FIREBASE_STORAGE_BUCKET` ✅
+- `VITE_FIREBASE_MESSAGING_SENDER_ID` ✅
+- `VITE_FIREBASE_APP_ID` ✅
+- `VITE_SUPABASE_URL` ✅
+- `VITE_SUPABASE_PUBLISHABLE_KEY` ✅
+- `VITE_API_URL` ⚠️ (Mettre à jour avec l'URL Render réelle)
 
-### Supabase (Already Configured)
-- ✅ `VITE_SUPABASE_URL` - Supabase project URL
-- ✅ `VITE_SUPABASE_PUBLISHABLE_KEY` - Supabase anon/public key
-- ✅ `VITE_SUPABASE_PROJECT_ID` - Supabase project ID
+## Démarrage
 
-### Firebase (User Must Provide)
-The following Firebase credentials need to be added to your `.env` file:
-- ⚠️ `VITE_FIREBASE_API_KEY` - Firebase API key
-- ⚠️ `VITE_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
-- ⚠️ `VITE_FIREBASE_PROJECT_ID` - Firebase project ID
-- ⚠️ `VITE_FIREBASE_STORAGE_BUCKET` - Firebase storage bucket
-- ⚠️ `VITE_FIREBASE_MESSAGING_SENDER_ID` - Firebase messaging sender ID
-- ⚠️ `VITE_FIREBASE_APP_ID` - Firebase app ID
+### En développement (Replit)
+L'application démarre automatiquement via le workflow "Start application":
+```bash
+npm run dev
+```
+- Accessible sur: https://[votre-repl].replit.dev
+- Port: 5000
+- Hot reload activé
 
-See `env.example` for reference.
+### Build pour production
+```bash
+npm run build
+```
 
-### Optional
-- `VITE_API_URL` - Backend API URL (if using the separate backend)
+## Pages principales
 
-## How to Add Firebase Credentials
-1. Go to your Firebase Console (https://console.firebase.google.com)
-2. Select your project or create a new one
-3. Go to Project Settings > General
-4. Scroll to "Your apps" section and find your web app config
-5. Copy the config values to your `.env` file
-6. Restart the development server
+- `/` - Page d'accueil avec présentation VIP
+- `/auth/login` - Connexion
+- `/auth/register` - Inscription
+- `/dashboard` - Tableau de bord utilisateur
+- `/pronos/today` - Pronostics du jour
+- `/pronos/yesterday` - Pronostics d'hier
+- `/pronos/before-yesterday` - Pronostics avant-hier
+- `/pronos/:id` - Détail d'un pronostic
+- `/pricing` - Plans d'abonnement
+- `/account` - Compte utilisateur
+- `/referral` - Programme de parrainage
+- `/admin` - Administration (admin uniquement)
 
-## Database Schema
-The project uses Supabase with the following main tables:
-- `profiles` - User profiles with referral codes
-- `user_roles` - User role assignments (user/admin)
-- `subscriptions` - User subscription plans (basic/pro/vip)
-- `pronos` - Betting predictions/tips
-- `transactions` - Payment transactions
-- `referrals` - Referral tracking and commissions
+## Problèmes connus et solutions
 
-See `supabase/migrations/` for full schema details.
+### Erreur CORS avec le backend
+**Problème**: `Access-Control-Allow-Origin` header manquant  
+**Cause**: URL du backend incorrecte ou backend non configuré  
+**Solution**: 
+1. Vérifier que le backend est déployé sur Render
+2. Mettre à jour `VITE_API_URL` dans les secrets Replit
+3. Configurer CORS dans le backend pour autoriser l'origine Replit
 
-## Key Features
-- User authentication (Firebase + Supabase)
-- Multiple subscription tiers (Basic, Pro, VIP)
-- Sports betting predictions with confidence scores
-- Referral system with commission tracking
-- Admin panel for managing pronos
-- Responsive design with dark mode support
+### Erreur Firebase "invalid-api-key"
+**Problème**: Firebase ne peut pas s'initialiser  
+**Cause**: Credentials Firebase manquants ou incorrects  
+**Solution**: ✅ Résolu - Credentials configurés via Replit Secrets
 
-## Development
-- Run `npm run dev` to start the development server on port 5000
-- The workflow "Start application" is configured to auto-start
-- Access the app through the Replit webview
+## Prochaines étapes recommandées
 
-## Notes
-- The project has both Firebase and Supabase authentication integrated
-- There's a separate backend folder with Prisma/Express, but the main app uses Supabase directly
-- Row-Level Security (RLS) is enabled on all Supabase tables
-- The app uses React Router for client-side routing
+1. **Backend API**
+   - Vérifier que le backend Render est accessible
+   - Mettre à jour `VITE_API_URL` avec l'URL correcte
+   - Configurer les CORS pour accepter les requêtes Replit
+
+2. **Tests**
+   - Tester la création de compte
+   - Tester la connexion
+   - Vérifier les abonnements
+
+3. **Déploiement**
+   - Publier via Replit Deployments pour une URL permanente
+   - Configurer un domaine personnalisé si besoin
+
+## Support et Documentation
+
+- Frontend déployé: Replit (ce workspace)
+- Backend: Render (à configurer)
+- Base de données: Supabase
+- Authentication: Firebase
+
+## Notes de migration depuis Lovable
+
+- ✅ Port changé de 8080 → 5000 (requis par Replit)
+- ✅ Host changé de `::` → `0.0.0.0`
+- ✅ `allowedHosts: true` ajouté à vite.config.ts
+- ✅ Firebase package installé
+- ✅ Alias `@assets` ajouté pour les assets
+- ✅ .gitignore mis à jour pour protéger .env
+- ✅ Toutes les dépendances npm installées
+
+## Préférences utilisateur
+- Langue: Français
+- Framework: React + TypeScript + Vite
+- UI: Shadcn + Tailwind CSS
+- Theme: Sombre avec accents dorés/jaunes
