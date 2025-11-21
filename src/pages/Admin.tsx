@@ -53,15 +53,22 @@ export default function Admin() {
         return;
       }
 
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
+      console.log('Checking admin access for:', user.email);
+
+      const { data: adminUser, error } = await (supabase as any)
+        .from('admin_users')
+        .select('email')
+        .eq('email', user.email)
         .single();
 
-      if (!roles) {
-        toast({ title: 'Accès refusé', description: 'Vous devez être admin pour accéder à cette page.', variant: 'destructive' });
+      console.log('Admin check result:', { adminUser, error });
+
+      if (!adminUser) {
+        toast({ 
+          title: 'Accès refusé', 
+          description: 'Vous devez être admin pour accéder à cette page.', 
+          variant: 'destructive' 
+        });
         navigate('/dashboard');
         return;
       }
