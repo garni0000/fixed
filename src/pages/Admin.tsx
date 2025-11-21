@@ -55,15 +55,13 @@ export default function Admin() {
 
       console.log('Checking admin access for:', user.email);
 
-      const { data: adminUser, error } = await (supabase as any)
-        .from('admin_users')
-        .select('email')
-        .eq('email', user.email)
-        .single();
+      // Liste des emails administrateurs
+      const adminEmails = ['marious10102002@gmail.com'];
+      
+      const isAdmin = adminEmails.includes(user.email || '');
+      console.log('Is admin?', isAdmin);
 
-      console.log('Admin check result:', { adminUser, error });
-
-      if (!adminUser) {
+      if (!isAdmin) {
         toast({ 
           title: 'Accès refusé', 
           description: 'Vous devez être admin pour accéder à cette page.', 
