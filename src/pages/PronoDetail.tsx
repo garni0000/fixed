@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Card } from '@/components/ui/card';
+import { getUserTier, getPronoTier, canAccessProno, TIER_LABELS, TIER_COLORS } from '@/lib/tier-utils';
 
 const PronoDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,9 +15,10 @@ const PronoDetail = () => {
   const { user } = useSupabaseAuth();
 
   const typeConfig = {
-    safe: { icon: Shield, label: 'SAFE', color: 'text-success' },
-    risk: { icon: Zap, label: 'RISK', color: 'text-destructive' },
-    vip: { icon: TrendingUp, label: 'VIP', color: 'text-primary' },
+    free: { icon: Shield, label: TIER_LABELS.free, color: TIER_COLORS.free },
+    basic: { icon: Zap, label: TIER_LABELS.basic, color: TIER_COLORS.basic },
+    pro: { icon: TrendingUp, label: TIER_LABELS.pro, color: TIER_COLORS.pro },
+    vip: { icon: TrendingUp, label: TIER_LABELS.vip, color: TIER_COLORS.vip },
   };
 
   if (isLoading) {
@@ -47,17 +49,13 @@ const PronoDetail = () => {
     );
   }
 
-  // Normaliser le type de prono (anciens types safe/risk → free)
-  const pronoType = (prono.prono_type === 'safe' || prono.prono_type === 'risk' || prono.prono_type === 'free')
-    ? 'free'
-    : (prono.prono_type || 'free'); // Si pas de type, considérer comme free
+  // Obtenir le tier de l'utilisateur et du prono
+  const userTier = getUserTier(user?.subscription);
+  const pronoTier = getPronoTier(prono.prono_type);
+  const isLocked = !canAccessProno(userTier, pronoTier);
 
-  // Vérifier si l'utilisateur a accès au prono VIP
-  const hasVipAccess = user?.subscription?.plan === 'vip' && user?.subscription?.status === 'active';
-  const isVipLocked = pronoType === 'vip' && !hasVipAccess;
-
-  // Si le prono est VIP et l'utilisateur n'a pas accès, afficher le message de verrouillage
-  if (isVipLocked) {
+  // Si le prono est verrouillé, afficher le message de verrouillage
+  if (isLocked) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -71,14 +69,48 @@ const PronoDetail = () => {
 
           <Card className="max-w-2xl mx-auto p-12 text-center bg-primary/5 border-primary/20">
             <Lock className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">Contenu Réservé VIP</h2>
+            <h2 className="text-3xl font-bold mb-4">Contenu Réservé {TIER_LABELS[pronoTier]}</h2>
             <p className="text-muted-foreground mb-8 text-lg">
-              Ce pronostic est réservé aux membres VIP. Abonnez-vous pour accéder à tous nos pronos premium et maximiser vos gains.
+              Ce pronostic est réservé aux abonnés {TIER_LABELS[pronoTier]}. 
+              Abonnez-vous pour accéder à tous nos pronos premium et maximiser vos gains.
             </p>
+            
+            {/* Aperçu partiel */}
+            <div className="mb-8 p-6 bg-card rounded-lg text-left max-w-md mx-auto">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Match</span>
+                  <span className="font-semibold">{prono.home_team} vs {prono.away_team}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Compétition</span>
+                  <span className="font-semibold">{prono.competition}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Cote</span>
+                  <span className="text-primary font-bold text-lg">{prono.odd?.toFixed(2) || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center opacity-50">
+                  <span className="text-muted-foreground">Pronostic</span>
+                  <div className="flex items-center gap-2">
+                    <Lock size={16} />
+                    <span>Verrouillé</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center opacity-50">
+                  <span className="text-muted-foreground">Analyse</span>
+                  <div className="flex items-center gap-2">
+                    <Lock size={16} />
+                    <span>Verrouillée</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-4 justify-center flex-wrap">
               <Link to="/pricing">
-                <Button size="lg" variant="default">
-                  Voir les offres VIP
+                <Button size="lg" variant="default" data-testid="button-upgrade-detail">
+                  Passer à {TIER_LABELS[pronoTier]}
                 </Button>
               </Link>
               <Link to="/pronos/today">
@@ -94,9 +126,8 @@ const PronoDetail = () => {
     );
   }
 
-  // Utiliser le type normalisé pour l'icône
-  const displayType = pronoType === 'free' ? 'safe' : 'vip';
-  const Icon = typeConfig[displayType as keyof typeof typeConfig]?.icon || Shield;
+  // Utiliser le tier pour l'icône
+  const Icon = typeConfig[pronoTier as keyof typeof typeConfig]?.icon || Shield;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -119,9 +150,9 @@ const PronoDetail = () => {
                 {prono.competition}
               </p>
             </div>
-            <Badge className={`${typeConfig[displayType as keyof typeof typeConfig]?.color || 'text-primary'} flex items-center gap-1`}>
+            <Badge className={`${typeConfig[pronoTier as keyof typeof typeConfig]?.color || 'text-primary'} flex items-center gap-1`}>
               <Icon size={14} />
-              {typeConfig[displayType as keyof typeof typeConfig]?.label || 'PRONO'}
+              {typeConfig[pronoTier as keyof typeof typeConfig]?.label || 'PRONO'}
             </Badge>
           </div>
 

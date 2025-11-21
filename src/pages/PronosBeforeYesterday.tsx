@@ -1,14 +1,40 @@
 import { Link } from 'react-router-dom';
-import { Calendar } from 'lucide-react';
+import { Calendar, Lock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
 
 const PronosBeforeYesterday = () => {
-  const beforeYesterday = new Date(Date.now() - 172800000).toISOString().split('T')[0];
-  const { data: pronos, isLoading } = usePronos(beforeYesterday);
+  const beforeYesterday = new Date(Date.now() - 172800000);
+  const beforeYesterdayDate = beforeYesterday.toISOString().split('T')[0];
+  const { data: pronos, isLoading } = usePronos(beforeYesterdayDate);
+  const { user } = useSupabaseAuth();
+
+  // Obtenir le tier de l'utilisateur
+  const userTier = getUserTier(user?.subscription);
+
+  // Compter les pronos verrouillés par tier
+  const lockedCounts = {
+    basic: 0,
+    pro: 0,
+    vip: 0
+  };
+
+  (pronos || []).forEach((prono: any) => {
+    const pronoTier = getPronoTier(prono.prono_type);
+    if (!canAccessProno(userTier, pronoTier)) {
+      if (pronoTier === 'basic') lockedCounts.basic++;
+      if (pronoTier === 'pro') lockedCounts.pro++;
+      if (pronoTier === 'vip') lockedCounts.vip++;
+    }
+  });
+
+  const totalLockedCount = lockedCounts.basic + lockedCounts.pro + lockedCounts.vip;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -20,7 +46,7 @@ const PronosBeforeYesterday = () => {
             <h1 className="text-4xl font-bold mb-2">Pronos d'avant-hier</h1>
             <p className="text-muted-foreground flex items-center gap-2">
               <Calendar size={16} />
-              {new Date(Date.now() - 172800000).toLocaleDateString('fr-FR', { 
+              {beforeYesterday.toLocaleDateString('fr-FR', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
@@ -39,6 +65,29 @@ const PronosBeforeYesterday = () => {
           </div>
         </div>
 
+        {/* Message pour pronos verrouillés */}
+        {totalLockedCount > 0 && (
+          <Card className="mb-6 p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center gap-4">
+              <Lock className="h-8 w-8 text-primary" />
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {totalLockedCount} prono{totalLockedCount > 1 ? 's' : ''} verrouillé{totalLockedCount > 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {lockedCounts.basic > 0 && `${lockedCounts.basic} BASIC`}
+                  {lockedCounts.pro > 0 && (lockedCounts.basic > 0 ? ', ' : '') + `${lockedCounts.pro} PRO`}
+                  {lockedCounts.vip > 0 && ((lockedCounts.basic > 0 || lockedCounts.pro > 0) ? ', ' : '') + `${lockedCounts.vip} VIP`}
+                  {' - '}Abonnez-vous pour débloquer tous les pronos premium
+                </p>
+              </div>
+              <Link to="/pricing" className="ml-auto">
+                <Button variant="default">Voir les offres</Button>
+              </Link>
+            </div>
+          </Card>
+        )}
+
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2].map(i => (
@@ -51,20 +100,18 @@ const PronosBeforeYesterday = () => {
           </div>
         ) : pronos && pronos.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pronos.map((prono: any) => (
-              <PronoCard 
-                key={prono.id}
-                id={prono.id}
-                match={`${prono.home_team} vs ${prono.away_team}`}
-                league={prono.competition}
-                prediction={prono.tip}
-                odds={prono.odd}
-                confidence={prono.confidence}
-                type={prono.prono_type || 'free'}
-                status={prono.result || 'pending'}
-                result={null}
-              />
-            ))}
+            {pronos.map((prono: any) => {
+              const pronoTier = getPronoTier(prono.prono_type);
+              const isLocked = !canAccessProno(userTier, pronoTier);
+              
+              return (
+                <PronoCard 
+                  key={prono.id}
+                  prono={prono}
+                  isLocked={isLocked}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-20">

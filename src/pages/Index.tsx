@@ -5,10 +5,16 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
 
 const Index = () => {
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
+  const { user } = useSupabaseAuth();
+  
+  // Obtenir le tier de l'utilisateur
+  const userTier = getUserTier(user?.subscription);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -115,20 +121,18 @@ const Index = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pronos?.slice(0, 3).map((prono: any) => (
-                <PronoCard 
-                  key={prono.id}
-                  id={prono.id}
-                  match={`${prono.home_team} vs ${prono.away_team}`}
-                  league={prono.competition}
-                  prediction={prono.tip}
-                  odds={prono.odd}
-                  confidence={prono.confidence}
-                  type={prono.prono_type || 'free'}
-                  status={prono.result || 'pending'}
-                  result={null}
-                />
-              ))}
+              {pronos?.slice(0, 3).map((prono: any) => {
+                const pronoTier = getPronoTier(prono.prono_type);
+                const isLocked = !canAccessProno(userTier, pronoTier);
+                
+                return (
+                  <PronoCard 
+                    key={prono.id}
+                    prono={prono}
+                    isLocked={isLocked}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

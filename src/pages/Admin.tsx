@@ -172,7 +172,7 @@ export default function Admin() {
         ...pronoForm,
         odd: parseFloat(pronoForm.odd),
         confidence: parseInt(pronoForm.confidence),
-        prono_type: pronoForm.prono_type as 'free' | 'vip',
+        prono_type: pronoForm.prono_type as 'free' | 'basic' | 'pro' | 'vip',
         status: pronoForm.status as 'draft' | 'published' | 'archived',
         author_id: user.id,
         published_at: pronoForm.status === 'published' ? new Date().toISOString() : null
@@ -440,7 +440,9 @@ export default function Admin() {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="free">FREE (Gratuit)</SelectItem>
-                                <SelectItem value="vip">VIP (Abonnés)</SelectItem>
+                                <SelectItem value="basic">BASIC (Abonnés Basic)</SelectItem>
+                                <SelectItem value="pro">PRO (Abonnés Pro)</SelectItem>
+                                <SelectItem value="vip">VIP (Abonnés VIP)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -493,8 +495,21 @@ export default function Admin() {
                         <TableCell>{prono.tip}</TableCell>
                         <TableCell>{prono.odd}</TableCell>
                         <TableCell>
-                          <Badge variant={prono.prono_type === 'vip' ? 'default' : 'secondary'}>
-                            {prono.prono_type}
+                          <Badge 
+                            variant={
+                              prono.prono_type === 'vip' ? 'default' :
+                              prono.prono_type === 'pro' ? 'default' :
+                              prono.prono_type === 'basic' ? 'secondary' :
+                              'outline'
+                            }
+                            className={
+                              prono.prono_type === 'vip' ? 'text-primary' :
+                              prono.prono_type === 'pro' ? 'text-purple-400' :
+                              prono.prono_type === 'basic' ? 'text-blue-400' :
+                              'text-success'
+                            }
+                          >
+                            {prono.prono_type?.toUpperCase()}
                           </Badge>
                         </TableCell>
                         <TableCell>
