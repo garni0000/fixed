@@ -52,7 +52,18 @@ const PronosBeforeYesterday = () => {
         ) : pronos && pronos.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pronos.map((prono: any) => (
-              <PronoCard key={prono.id} {...prono} />
+              <PronoCard 
+                key={prono.id}
+                id={prono.id}
+                match={`${prono.home_team} vs ${prono.away_team}`}
+                league={prono.competition}
+                prediction={prono.tip}
+                odds={prono.odd}
+                confidence={prono.confidence}
+                type={prono.prono_type || 'safe'}
+                status={prono.result || 'pending'}
+                result={null}
+              />
             ))}
           </div>
         ) : (
