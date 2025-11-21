@@ -171,20 +171,29 @@ export default function Admin() {
 
   const loadPayments = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger les paiements
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
-        .select(`
-          *,
-          profiles (
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPayments(data || []);
+      if (paymentsError) throw paymentsError;
+
+      // Charger les profils
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email');
+
+      // Joindre les données
+      const paymentsWithProfiles = (paymentsData || []).map(payment => {
+        const profile = (profilesData || []).find(p => p.id === payment.user_id);
+        return {
+          ...payment,
+          profiles: profile
+        };
+      });
+
+      setPayments(paymentsWithProfiles);
     } catch (error) {
       console.error('Error loading payments:', error);
       toast({ title: 'Erreur', description: 'Impossible de charger les paiements.', variant: 'destructive' });
