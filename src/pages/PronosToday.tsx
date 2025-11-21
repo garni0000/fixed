@@ -25,7 +25,7 @@ const PronosToday = () => {
   };
 
   (pronos || []).forEach((prono: any) => {
-    const pronoTier = getPronoTier(prono.prono_type);
+    const pronoTier = prono.access_tier || 'free';
     if (!canAccessProno(userTier, pronoTier)) {
       if (pronoTier === 'basic') lockedCounts.basic++;
       if (pronoTier === 'pro') lockedCounts.pro++;
@@ -100,7 +100,7 @@ const PronosToday = () => {
         ) : pronos && pronos.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pronos.map((prono: any) => {
-              const pronoTier = getPronoTier(prono.prono_type);
+              const pronoTier = prono.access_tier || 'free';
               const isLocked = !canAccessProno(userTier, pronoTier);
               
               return (

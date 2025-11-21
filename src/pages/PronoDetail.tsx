@@ -51,7 +51,7 @@ const PronoDetail = () => {
 
   // Obtenir le tier de l'utilisateur et du prono
   const userTier = getUserTier(user?.subscription);
-  const pronoTier = getPronoTier(prono.prono_type);
+  const pronoTier = prono.access_tier || 'free';
   const isLocked = !canAccessProno(userTier, pronoTier);
 
   // Si le prono est verrouillé, afficher le message de verrouillage

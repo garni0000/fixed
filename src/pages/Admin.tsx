@@ -30,7 +30,7 @@ export default function Admin() {
   const [pronos, setPronos] = useState<any[]>([]);
   const [pronoForm, setPronoForm] = useState({
     title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-    tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
+    tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'free', content: '', analysis: '', status: 'draft'
   });
   const [editingProno, setEditingProno] = useState<any>(null);
   const [isPronoDialogOpen, setIsPronoDialogOpen] = useState(false);
@@ -263,11 +263,23 @@ export default function Admin() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Validation des champs obligatoires
+      if (!pronoForm.title || !pronoForm.sport || !pronoForm.competition || !pronoForm.match_time ||
+          !pronoForm.home_team || !pronoForm.away_team || !pronoForm.tip || !pronoForm.odd || !pronoForm.confidence) {
+        toast({ title: 'Erreur', description: 'Tous les champs obligatoires doivent être remplis', variant: 'destructive' });
+        return;
+      }
+
+      // Convertir le datetime-local en UTC ISO (new Date interprète automatiquement comme heure locale)
+      const matchTimeUTC = new Date(pronoForm.match_time).toISOString();
+
       const pronoData = {
         ...pronoForm,
+        match_time: matchTimeUTC,
         odd: parseFloat(pronoForm.odd),
         confidence: parseInt(pronoForm.confidence),
         prono_type: pronoForm.prono_type as 'safe' | 'risk' | 'vip',
+        access_tier: pronoForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
         status: pronoForm.status as 'draft' | 'published' | 'archived',
         author_id: user.id,
         published_at: pronoForm.status === 'published' ? new Date().toISOString() : null
@@ -315,24 +327,34 @@ export default function Admin() {
   const resetPronoForm = () => {
     setPronoForm({
       title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-      tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
+      tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'free', content: '', analysis: '', status: 'draft'
     });
     setEditingProno(null);
   };
 
   const handleEditProno = (prono: any) => {
     setEditingProno(prono);
+    // Convertir le timestamp UTC en datetime-local en préservant l'heure locale
+    let matchTime = '';
+    if (prono.match_time) {
+      const date = new Date(prono.match_time);
+      // Convertir en format YYYY-MM-DDTHH:MM pour datetime-local
+      matchTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+    }
     setPronoForm({
       title: prono.title,
       sport: prono.sport,
       competition: prono.competition,
-      match_time: prono.match_time?.split('T')[0] || '',
+      match_time: matchTime,
       home_team: prono.home_team,
       away_team: prono.away_team,
       tip: prono.tip,
       odd: prono.odd.toString(),
       confidence: prono.confidence.toString(),
       prono_type: prono.prono_type,
+      access_tier: prono.access_tier || 'free',
       content: prono.content || '',
       analysis: prono.analysis || '',
       status: prono.status
@@ -527,7 +549,7 @@ export default function Admin() {
                             <Input type="number" min="0" max="100" value={pronoForm.confidence} onChange={(e) => setPronoForm({ ...pronoForm, confidence: e.target.value })} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                           <div>
                             <Label>Type de pari</Label>
                             <Select value={pronoForm.prono_type} onValueChange={(value) => setPronoForm({ ...pronoForm, prono_type: value })}>
@@ -538,6 +560,20 @@ export default function Admin() {
                                 <SelectItem value="safe">Safe (Faible risque)</SelectItem>
                                 <SelectItem value="risk">Risk (Risque élevé)</SelectItem>
                                 <SelectItem value="vip">VIP (Exclusif)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Niveau d'accès requis</Label>
+                            <Select value={pronoForm.access_tier} onValueChange={(value) => setPronoForm({ ...pronoForm, access_tier: value })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="free">FREE (Gratuit)</SelectItem>
+                                <SelectItem value="basic">BASIC (Abonnement Basic)</SelectItem>
+                                <SelectItem value="pro">PRO (Abonnement Pro)</SelectItem>
+                                <SelectItem value="vip">VIP (Abonnement VIP)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

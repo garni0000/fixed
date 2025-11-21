@@ -10,8 +10,8 @@ interface PronoCardProps {
 }
 
 const PronoCard = ({ prono, isLocked = false }: PronoCardProps) => {
-  // Normaliser le type de prono
-  const pronoTier = getPronoTier(prono.prono_type);
+  // Obtenir le niveau d'accès requis
+  const pronoTier = prono.access_tier || 'free';
   
   const typeConfig: Record<string, { icon: any; label: string; color: string }> = {
     free: { icon: Shield, label: TIER_LABELS.free, color: TIER_COLORS.free },
