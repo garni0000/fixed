@@ -99,7 +99,7 @@ export const useSupabaseAuth = () => {
             lastName: newProfile.last_name || '',
             subscription: {
               status: 'inactive',
-              plan: 'basic',
+              plan: 'free',
             },
             referral: {
               code: newProfile.referral_code,
@@ -128,7 +128,7 @@ export const useSupabaseAuth = () => {
           lastName: profile.last_name || '',
           subscription: {
             status: subscription?.status || 'inactive',
-            plan: subscription?.plan || 'basic',
+            plan: subscription?.plan || 'free',
             startDate: subscription?.current_period_start?.toString(),
             endDate: subscription?.current_period_end?.toString(),
             autoRenew: !subscription?.cancel_at_period_end,
