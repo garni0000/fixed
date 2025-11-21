@@ -7,7 +7,7 @@ import { usePronos } from '@/hooks/usePronos';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
+import { getUserTier, canAccessProno } from '@/lib/tier-utils';
 
 const PronosToday = () => {
   const today = new Date().toISOString().split('T')[0];

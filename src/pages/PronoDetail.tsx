@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Card } from '@/components/ui/card';
-import { getUserTier, getPronoTier, canAccessProno, TIER_LABELS, TIER_COLORS } from '@/lib/tier-utils';
+import { getUserTier, canAccessProno, TIER_LABELS, TIER_COLORS } from '@/lib/tier-utils';
 
 const PronoDetail = () => {
   const { id } = useParams<{ id: string }>();

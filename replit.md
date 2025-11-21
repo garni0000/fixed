@@ -5,8 +5,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 ## État Actuel (Migration complète vers Supabase)
 **Date de migration Firebase → Supabase**: 21 Novembre 2025  
-**Dernière mise à jour**: 21 Novembre 2025 - Système FREE/VIP + Protection sécurisée  
-**Statut**: ✅ Application 100% fonctionnelle avec système FREE/VIP sécurisé
+**Dernière mise à jour**: 21 Novembre 2025 - Système à 4 niveaux d'abonnement complet  
+**Statut**: ✅ Application 100% fonctionnelle avec système dual-field validé
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
@@ -15,30 +15,51 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - Services Supabase créés pour remplacer l'API backend
 - Interface utilisateur complète avec Shadcn UI
 - Système de routing avec React Router
-- **Système FREE/VIP SÉCURISÉ** : Protection multi-niveaux des pronos VIP
+- **Système dual-field COMPLET** : Séparation type de pari / niveau d'accès
 - Toutes les dépendances installées
 
-### 🎯 Système de types de pronos (FREE / VIP) - SÉCURISÉ
-- **FREE** : Pronos gratuits accessibles à tous les utilisateurs
-- **VIP** : Pronos réservés aux utilisateurs avec abonnement VIP actif
-- Le code gère automatiquement les anciens types (safe/risk → free)
-- **Protection multi-niveaux** :
-  - Filtrage dans les listes (PronosToday, PronosYesterday)
+### 🎯 Architecture Dual-Field pour les Pronos - VALIDÉE PAR ARCHITECT
+Le système utilise **deux champs distincts** pour offrir flexibilité maximale :
+
+#### 1️⃣ Type de Pari (`prono_type`) - Catégorisation du risque
+- **safe** : Paris sécurisés à faible risque
+- **risk** : Paris risqués à cote élevée  
+- **vip** : Paris premium avec analyse approfondie
+- **Utilisation** : Badge visuel, tri, filtrage par stratégie
+
+#### 2️⃣ Niveau d'Accès (`access_tier`) - Contrôle d'abonnement requis
+- **free** : Accessible à tous les utilisateurs (même non connectés)
+- **basic** : Abonnement Basic requis
+- **pro** : Abonnement Pro requis
+- **vip** : Abonnement VIP requis
+- **Utilisation** : Verrouillage du contenu, affichage filtré dans les listes
+
+#### ✅ Protection Multi-Niveaux
+- **Frontend** :
+  - Filtrage dans les listes (PronosToday, PronosYesterday, BeforeYesterday)
   - Blocage d'accès sur la page de détail (PronoDetail)
-  - Message "Contenu Réservé VIP" avec redirection vers /pricing
+  - Message "Contenu Réservé [TIER]" avec redirection vers /pricing
+  - PronoCard affiche DEUX badges : type de pari + niveau d'accès requis
+- **Admin Panel** :
+  - Formulaire avec deux sélecteurs indépendants
+  - Validation complète des champs obligatoires
+  - Gestion timezone correcte (preservation des dates)
+  - Sauvegarde validée de `access_tier` dans Supabase
 
-### 🔐 Sécurité VIP
-- ✅ Utilisateurs non-VIP ne voient que les pronos FREE dans les listes
-- ✅ Accès direct à un prono VIP par URL → Bloqué avec message
-- ✅ Fallback automatique pour anciens types de pronos
-- ⚠️ **Prochaine étape recommandée** : Ajouter Row Level Security (RLS) dans Supabase
+### 🔐 Sécurité et Validation
+- ✅ Migration SQL créée (`20251121000001_add_access_tier_to_pronos.sql`)
+- ✅ Champ `access_tier` correctement persisté en base de données
+- ✅ Validation des champs obligatoires empêche les erreurs timestamp vide
+- ✅ Gestion timezone corrigée (pas de double conversion)
+- ✅ Tous les contrôles d'accès utilisent `access_tier` (pas `prono_type`)
+- ✅ Imports inutilisés nettoyés (`getPronoTier` supprimé où non utilisé)
+- ⚠️ **Prochaine étape recommandée** : Row Level Security (RLS) côté Supabase
 
-### ⚠️ Actions optionnelles
-- **Migration SQL types pronos**: Pour nettoyer les anciens types dans Supabase
-  - Consultez `GUIDE_MIGRATION_FREE_VIP.md` pour les instructions
-  - Script disponible : `MISE_A_JOUR_TYPES_PRONOS.sql`
-  - **Note**: Le frontend fonctionne déjà sans cette migration
-- **Row Level Security**: Voir `RESUME_SYSTEME_VIP.md` pour les policies SQL recommandées
+### 📋 Migration SQL à appliquer
+Pour activer le système dual-field dans votre base Supabase :
+1. Connectez-vous au SQL Editor de votre projet Supabase
+2. Exécutez `supabase/migrations/20251121000001_add_access_tier_to_pronos.sql`
+3. Vérifiez que la colonne `access_tier` est bien ajoutée à la table `pronos`
 
 ## Architecture
 
