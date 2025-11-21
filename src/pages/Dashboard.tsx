@@ -7,9 +7,19 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { isAuthenticated, user } = useSupabaseAuth();
+  const { isAuthenticated, user, isLoading: authLoading } = useSupabaseAuth();
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
+
+  // Ne pas rediriger pendant le chargement de l'authentification
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Chargement...</p>
+      </div>
+    </div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" />;

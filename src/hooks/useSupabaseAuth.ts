@@ -55,7 +55,9 @@ export const useSupabaseAuth = () => {
 
   const loadUserProfile = async (authUser: User) => {
     try {
-      const { data: profile } = await supabase
+      console.log('Loading profile for user:', authUser.id);
+      
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -68,14 +70,58 @@ export const useSupabaseAuth = () => {
         .eq('id', authUser.id)
         .single();
 
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, creating one...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authUser.id,
+              email: authUser.email!,
+              first_name: authUser.user_metadata?.first_name || '',
+              last_name: authUser.user_metadata?.last_name || '',
+              referral_code: `REF${authUser.id.substring(0, 8).toUpperCase()}`,
+            })
+            .select()
+            .single();
+          
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            return;
+          }
+          
+          setUser({
+            id: newProfile.id,
+            email: newProfile.email,
+            firstName: newProfile.first_name || '',
+            lastName: newProfile.last_name || '',
+            subscription: {
+              status: 'inactive',
+              plan: 'basic',
+            },
+            referral: {
+              code: newProfile.referral_code,
+              commission: 0,
+              totalEarned: 0,
+              referredUsers: 0,
+            },
+          });
+          return;
+        }
+        return;
+      }
+
       if (profile) {
+        console.log('Profile loaded:', profile);
         const { data: subscription } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('user_id', authUser.id)
           .maybeSingle();
 
-        setUser({
+        const userProfile = {
           id: profile.id,
           email: profile.email,
           firstName: profile.first_name || '',
@@ -93,7 +139,10 @@ export const useSupabaseAuth = () => {
             totalEarned: Number(profile.balance_commission) || 0,
             referredUsers: 0,
           },
-        });
+        };
+        
+        console.log('Setting user:', userProfile);
+        setUser(userProfile);
       }
     } catch (error) {
       console.error('Error loading user profile:', error);

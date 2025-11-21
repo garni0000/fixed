@@ -35,19 +35,27 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      await register(formData.email, formData.password, formData.firstName, formData.lastName);
+      console.log('Attempting registration...');
+      const result = await register(formData.email, formData.password, formData.firstName, formData.lastName);
+      console.log('Registration result:', result);
+      
       toast({
         title: "Inscription réussie",
-        description: "Bienvenue dans la communauté VIP ! Vérifiez votre email pour confirmer votre compte.",
+        description: "Bienvenue dans la communauté VIP !",
       });
-      navigate('/dashboard');
+      
+      // Petit délai pour s'assurer que l'état est bien mis à jour
+      setTimeout(() => {
+        console.log('Navigating to dashboard...');
+        navigate('/dashboard');
+      }, 100);
     } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Erreur d'inscription",
         description: error?.message || "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

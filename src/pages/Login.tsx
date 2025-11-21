@@ -20,19 +20,27 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      console.log('Attempting login...');
+      const result = await login(email, password);
+      console.log('Login result:', result);
+      
       toast({
         title: "Connexion réussie",
         description: "Bienvenue sur FixedPronos !",
       });
-      navigate('/dashboard');
+      
+      // Petit délai pour s'assurer que l'état est bien mis à jour
+      setTimeout(() => {
+        console.log('Navigating to dashboard...');
+        navigate('/dashboard');
+      }, 100);
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Erreur de connexion",
         description: error?.message || "Identifiants incorrects. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
