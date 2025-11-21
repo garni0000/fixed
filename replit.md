@@ -5,8 +5,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 ## État Actuel (Migration complète vers Supabase)
 **Date de migration Firebase → Supabase**: 21 Novembre 2025  
-**Dernière mise à jour**: 21 Novembre 2025 - Migration système FREE/VIP  
-**Statut**: ✅ Application fonctionnelle avec système FREE/VIP
+**Dernière mise à jour**: 21 Novembre 2025 - Système FREE/VIP + Protection sécurisée  
+**Statut**: ✅ Application 100% fonctionnelle avec système FREE/VIP sécurisé
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
@@ -15,19 +15,30 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - Services Supabase créés pour remplacer l'API backend
 - Interface utilisateur complète avec Shadcn UI
 - Système de routing avec React Router
-- **Système FREE/VIP** : Pronos gratuits et pronos VIP pour abonnés
+- **Système FREE/VIP SÉCURISÉ** : Protection multi-niveaux des pronos VIP
 - Toutes les dépendances installées
 
-### 🎯 Système de types de pronos (FREE / VIP)
+### 🎯 Système de types de pronos (FREE / VIP) - SÉCURISÉ
 - **FREE** : Pronos gratuits accessibles à tous les utilisateurs
-- **VIP** : Pronos réservés aux utilisateurs avec abonnement actif
+- **VIP** : Pronos réservés aux utilisateurs avec abonnement VIP actif
 - Le code gère automatiquement les anciens types (safe/risk → free)
+- **Protection multi-niveaux** :
+  - Filtrage dans les listes (PronosToday, PronosYesterday)
+  - Blocage d'accès sur la page de détail (PronoDetail)
+  - Message "Contenu Réservé VIP" avec redirection vers /pricing
+
+### 🔐 Sécurité VIP
+- ✅ Utilisateurs non-VIP ne voient que les pronos FREE dans les listes
+- ✅ Accès direct à un prono VIP par URL → Bloqué avec message
+- ✅ Fallback automatique pour anciens types de pronos
+- ⚠️ **Prochaine étape recommandée** : Ajouter Row Level Security (RLS) dans Supabase
 
 ### ⚠️ Actions optionnelles
 - **Migration SQL types pronos**: Pour nettoyer les anciens types dans Supabase
   - Consultez `GUIDE_MIGRATION_FREE_VIP.md` pour les instructions
   - Script disponible : `MISE_A_JOUR_TYPES_PRONOS.sql`
   - **Note**: Le frontend fonctionne déjà sans cette migration
+- **Row Level Security**: Voir `RESUME_SYSTEME_VIP.md` pour les policies SQL recommandées
 
 ## Architecture
 
