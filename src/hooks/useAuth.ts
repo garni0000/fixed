@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { authService, userService } from '@/lib/api';
+import { authService, userService, api } from '@/lib/api';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 
 interface User {
   id: string;
@@ -37,34 +39,45 @@ export const useAuth = () => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      try {
-        const response: any = await userService.getProfile();
-        setUser(response.data);
-      } catch (error) {
-        localStorage.removeItem('auth_token');
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const response: any = await api.get('/auth/me');
+        setUser(response.data.user);
       }
+    } catch (error) {
+      console.error('Auth check error:', error);
     }
     setIsLoading(false);
   };
 
   const login = async (email: string, password: string) => {
-    const response: any = await authService.login(email, password);
-    localStorage.setItem('auth_token', response.data.token);
+    // 1. Sign in with Firebase
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // 2. Call backend to sync user
+    const response: any = await api.post('/auth/register', {});
     setUser(response.data.user);
     return response.data;
   };
 
   const register = async (email: string, password: string, firstName: string, lastName: string) => {
-    const response: any = await authService.register(email, password, firstName, lastName);
-    localStorage.setItem('auth_token', response.data.token);
+    // 1. Create Firebase account
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // 2. Update Firebase profile
+    await updateProfile(userCredential.user, {
+      displayName: `${firstName} ${lastName}`,
+    });
+    
+    // 3. Call backend to create user record
+    const response: any = await api.post('/auth/register', {});
     setUser(response.data.user);
     return response.data;
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
   };
 

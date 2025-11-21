@@ -15,10 +15,15 @@ export const api = axios.create({
 });
 
 // Auth interceptor
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(async (config) => {
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const token = await currentUser.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.error('Error getting Firebase token:', error);
   }
   return config;
 });
