@@ -171,11 +171,16 @@ export default function Admin() {
 
   const loadPayments = async () => {
     try {
+      console.log('📋 Loading payments...');
+      
       // Charger les paiements
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
         .order('created_at', { ascending: false });
+
+      console.log('💳 Payments data:', paymentsData);
+      console.log('❌ Payments error:', paymentsError);
 
       if (paymentsError) throw paymentsError;
 
@@ -183,6 +188,8 @@ export default function Admin() {
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email');
+
+      console.log('👤 Profiles data:', profilesData);
 
       // Joindre les données
       const paymentsWithProfiles = (paymentsData || []).map(payment => {
@@ -193,6 +200,7 @@ export default function Admin() {
         };
       });
 
+      console.log('✅ Final payments with profiles:', paymentsWithProfiles);
       setPayments(paymentsWithProfiles);
     } catch (error) {
       console.error('Error loading payments:', error);
