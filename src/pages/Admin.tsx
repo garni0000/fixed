@@ -55,11 +55,12 @@ export default function Admin() {
 
       console.log('Checking admin access for:', user.email);
 
-      // Liste des emails administrateurs
-      const adminEmails = ['marious10102002@gmail.com'];
+      // Liste des emails administrateurs (stockée dans les variables d'environnement)
+      const adminEmailsString = import.meta.env.VITE_ADMIN_EMAILS || '';
+      const adminEmails = adminEmailsString.split(',').map((email: string) => email.trim());
       
       const isAdmin = adminEmails.includes(user.email || '');
-      console.log('Is admin?', isAdmin);
+      console.log('Is admin?', isAdmin, 'Admin emails:', adminEmails);
 
       if (!isAdmin) {
         toast({ 

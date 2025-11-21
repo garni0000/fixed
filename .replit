@@ -39,9 +39,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 35549
-externalPort = 3001
-
-[[ports]]
 localPort = 45575
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+VITE_ADMIN_EMAILS = "marious10102002@gmail.com"
