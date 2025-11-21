@@ -5,11 +5,15 @@ import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Navigate } from 'react-router-dom';
+import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
 
 const Dashboard = () => {
   const { isAuthenticated, user, isLoading: authLoading } = useSupabaseAuth();
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
+  
+  // Obtenir le tier de l'utilisateur
+  const userTier = getUserTier(user?.subscription);
 
   // Ne pas rediriger pendant le chargement de l'authentification
   if (authLoading) {
@@ -100,20 +104,18 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pronos?.map((prono: any) => (
-                <PronoCard 
-                  key={prono.id}
-                  id={prono.id}
-                  match={`${prono.home_team} vs ${prono.away_team}`}
-                  league={prono.competition}
-                  prediction={prono.tip}
-                  odds={prono.odd}
-                  confidence={prono.confidence}
-                  type={prono.prono_type || 'free'}
-                  status={prono.result || 'pending'}
-                  result={null}
-                />
-              ))}
+              {pronos?.map((prono: any) => {
+                const pronoTier = getPronoTier(prono.prono_type);
+                const isLocked = !canAccessProno(userTier, pronoTier);
+                
+                return (
+                  <PronoCard 
+                    key={prono.id}
+                    prono={prono}
+                    isLocked={isLocked}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
