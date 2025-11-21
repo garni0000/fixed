@@ -121,13 +121,37 @@ export default function Admin() {
 
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger les profils
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*, subscriptions(*), user_roles(role)')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setUsers(data || []);
+      if (profilesError) throw profilesError;
+
+      // Charger les abonnements
+      const { data: subscriptionsData } = await supabase
+        .from('subscriptions')
+        .select('*');
+
+      // Charger les rôles
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      // Joindre les données
+      const usersWithDetails = (profilesData || []).map(profile => {
+        const subscription = (subscriptionsData || []).find(sub => sub.user_id === profile.id);
+        const roleData = (rolesData || []).find(role => role.user_id === profile.id);
+        
+        return {
+          ...profile,
+          subscriptions: subscription ? [subscription] : [],
+          user_roles: roleData ? [roleData] : []
+        };
+      });
+
+      setUsers(usersWithDetails);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
