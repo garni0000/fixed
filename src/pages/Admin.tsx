@@ -30,7 +30,7 @@ export default function Admin() {
   const [pronos, setPronos] = useState<any[]>([]);
   const [pronoForm, setPronoForm] = useState({
     title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-    tip: '', odd: '', confidence: '', prono_type: 'free', content: '', analysis: '', status: 'draft'
+    tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
   });
   const [editingProno, setEditingProno] = useState<any>(null);
   const [isPronoDialogOpen, setIsPronoDialogOpen] = useState(false);
@@ -267,7 +267,7 @@ export default function Admin() {
         ...pronoForm,
         odd: parseFloat(pronoForm.odd),
         confidence: parseInt(pronoForm.confidence),
-        prono_type: pronoForm.prono_type as 'free' | 'basic' | 'pro' | 'vip',
+        prono_type: pronoForm.prono_type as 'safe' | 'risk' | 'vip',
         status: pronoForm.status as 'draft' | 'published' | 'archived',
         author_id: user.id,
         published_at: pronoForm.status === 'published' ? new Date().toISOString() : null
@@ -315,7 +315,7 @@ export default function Admin() {
   const resetPronoForm = () => {
     setPronoForm({
       title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-      tip: '', odd: '', confidence: '', prono_type: 'free', content: '', analysis: '', status: 'draft'
+      tip: '', odd: '', confidence: '', prono_type: 'safe', content: '', analysis: '', status: 'draft'
     });
     setEditingProno(null);
   };
@@ -529,16 +529,15 @@ export default function Admin() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label>Type</Label>
+                            <Label>Type de pari</Label>
                             <Select value={pronoForm.prono_type} onValueChange={(value) => setPronoForm({ ...pronoForm, prono_type: value })}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="free">FREE (Gratuit)</SelectItem>
-                                <SelectItem value="basic">BASIC (Abonnés Basic)</SelectItem>
-                                <SelectItem value="pro">PRO (Abonnés Pro)</SelectItem>
-                                <SelectItem value="vip">VIP (Abonnés VIP)</SelectItem>
+                                <SelectItem value="safe">Safe (Faible risque)</SelectItem>
+                                <SelectItem value="risk">Risk (Risque élevé)</SelectItem>
+                                <SelectItem value="vip">VIP (Exclusif)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -594,18 +593,18 @@ export default function Admin() {
                           <Badge 
                             variant={
                               prono.prono_type === 'vip' ? 'default' :
-                              prono.prono_type === 'pro' ? 'default' :
-                              prono.prono_type === 'basic' ? 'secondary' :
+                              prono.prono_type === 'risk' ? 'destructive' :
                               'outline'
                             }
                             className={
                               prono.prono_type === 'vip' ? 'text-primary' :
-                              prono.prono_type === 'pro' ? 'text-purple-400' :
-                              prono.prono_type === 'basic' ? 'text-blue-400' :
+                              prono.prono_type === 'risk' ? '' :
                               'text-success'
                             }
                           >
-                            {prono.prono_type?.toUpperCase()}
+                            {prono.prono_type === 'safe' ? 'SAFE' :
+                             prono.prono_type === 'risk' ? 'RISK' :
+                             'VIP'}
                           </Badge>
                         </TableCell>
                         <TableCell>
