@@ -1,23 +1,26 @@
 # FixedPronos - Plateforme de Pronostics Sportifs
 
 ## Vue d'ensemble
-FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonnement et de parrainage. L'application utilise React/TypeScript pour le frontend, Firebase pour l'authentification, et Supabase comme base de données.
+FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonnement et de parrainage. L'application utilise React/TypeScript pour le frontend et **Supabase** pour l'authentification et la base de données.
 
-## État Actuel (Migré depuis Lovable vers Replit)
-**Date de migration**: 21 Novembre 2025  
-**Statut**: ✅ Opérationnel
+## État Actuel (Migration complète vers Supabase)
+**Date de migration Firebase → Supabase**: 21 Novembre 2025  
+**Statut**: ✅ Migration terminée, en attente d'application des migrations SQL
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
-- Firebase Authentication configuré avec credentials sécurisés
-- Supabase intégré pour la base de données
+- **Supabase Authentication** configuré avec credentials sécurisés
+- **Supabase Database** configuré avec schéma complet
+- Services Supabase créés pour remplacer l'API backend
 - Interface utilisateur complète avec Shadcn UI
 - Système de routing avec React Router
 - Toutes les dépendances installées
 
-### ⚠️ Configuration requise
-- **VITE_API_URL**: Doit pointer vers le backend Render réel (actuellement en placeholder)
-- **Backend**: Nécessite un backend Node.js déployé sur Render pour les opérations complètes
+### ⚠️ Actions requises
+- **Migrations SQL**: Vous devez appliquer les migrations dans votre tableau de bord Supabase
+  - Consultez `MIGRATION_SUPABASE.md` pour les instructions détaillées
+  - Fichiers à exécuter dans `supabase/migrations/`
+- **Rôle Admin**: Créer le premier compte admin via SQL après inscription
 
 ## Architecture
 
@@ -29,18 +32,27 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - **Styling**: Tailwind CSS avec thème personnalisé
 
 ### Authentification
-- **Primary**: Firebase Authentication
-- **Secondary**: Supabase (base de données avec RLS)
-- Les deux systèmes coexistent - Firebase pour l'auth, Supabase pour les données
+- **Système unique**: Supabase Authentication
+- Row Level Security (RLS) activé sur toutes les tables
+- Trigger automatique pour créer un profil lors de l'inscription
+- Système de rôles (user/admin) via table `user_roles`
 
 ### Base de données (Supabase)
-Tables principales:
-- `profiles` - Profils utilisateurs avec codes de parrainage
-- `user_roles` - Rôles (user/admin)
-- `subscriptions` - Abonnements (basic/pro/vip)
-- `pronos` - Pronostics sportifs
-- `transactions` - Historique des paiements
-- `referrals` - Système de parrainage
+Tables principales (migrations dans `supabase/migrations/`):
+- `profiles` - Profils utilisateurs avec codes de parrainage uniques
+- `user_roles` - Rôles (user/admin) avec vérification par fonction
+- `subscriptions` - Abonnements (basic/pro/vip) avec intégration Stripe
+- `pronos` - Pronostics sportifs avec statuts et résultats
+- `transactions` - Historique financier (paiements, commissions, remboursements)
+- `referrals` - Système de parrainage avec commissions
+- `payments` - Demandes de paiement (crypto, mobile money, virement)
+
+### Services API (Frontend → Supabase direct)
+Tous les appels API passent par `src/lib/supabase-services.ts`:
+- `supabasePronosService` - CRUD pronos, publication
+- `supabaseUserService` - Profils, abonnements, parrainages
+- `supabasePaymentService` - Historique et création de paiements
+- `supabaseAdminService` - Gestion admin (users, pronos, subscriptions)
 
 ## Structure du Projet
 
@@ -63,15 +75,13 @@ Tables principales:
 ## Variables d'environnement
 
 ### Configurées via Replit Secrets
-- `VITE_FIREBASE_API_KEY` ✅
-- `VITE_FIREBASE_AUTH_DOMAIN` ✅
-- `VITE_FIREBASE_PROJECT_ID` ✅
-- `VITE_FIREBASE_STORAGE_BUCKET` ✅
-- `VITE_FIREBASE_MESSAGING_SENDER_ID` ✅
-- `VITE_FIREBASE_APP_ID` ✅
-- `VITE_SUPABASE_URL` ✅
-- `VITE_SUPABASE_PUBLISHABLE_KEY` ✅
-- `VITE_API_URL` ⚠️ (Mettre à jour avec l'URL Render réelle)
+- `VITE_SUPABASE_URL` ✅ - URL du projet Supabase
+- `VITE_SUPABASE_ANON_KEY` ✅ - Clé publique Supabase
+- `VITE_ADMIN_EMAILS` ✅ - Liste des emails administrateurs (séparés par virgule)
+
+### Anciennes variables (non utilisées)
+- ~~`VITE_FIREBASE_*`~~ - Remplacé par Supabase Auth
+- ~~`VITE_API_URL`~~ - Backend Render remplacé par services Supabase directs
 
 ## Démarrage
 
@@ -106,51 +116,62 @@ npm run build
 
 ## Problèmes connus et solutions
 
-### Erreur CORS avec le backend
-**Problème**: `Access-Control-Allow-Origin` header manquant  
-**Cause**: URL du backend incorrecte ou backend non configuré  
+### Erreur "Could not find table 'pronos'"
+**Problème**: Les tables Supabase n'existent pas  
+**Cause**: Les migrations SQL n'ont pas encore été appliquées  
 **Solution**: 
-1. Vérifier que le backend est déployé sur Render
-2. Mettre à jour `VITE_API_URL` dans les secrets Replit
-3. Configurer CORS dans le backend pour autoriser l'origine Replit
+1. Ouvrez `MIGRATION_SUPABASE.md` pour les instructions détaillées
+2. Connectez-vous à votre projet Supabase
+3. Exécutez les 3 fichiers SQL dans l'ordre depuis le dossier `supabase/migrations/`
+4. Créez votre premier compte admin via SQL
 
-### Erreur Firebase "invalid-api-key"
-**Problème**: Firebase ne peut pas s'initialiser  
-**Cause**: Credentials Firebase manquants ou incorrects  
-**Solution**: ✅ Résolu - Credentials configurés via Replit Secrets
+### Erreurs TypeScript sur 'payments'
+**Problème**: Types Supabase manquants pour la table payments  
+**Cause**: La table n'existe pas encore dans votre base Supabase  
+**Solution**: ✅ Normal - ces erreurs disparaîtront après l'application des migrations SQL
 
 ## Prochaines étapes recommandées
 
-1. **Backend API**
-   - Vérifier que le backend Render est accessible
-   - Mettre à jour `VITE_API_URL` avec l'URL correcte
-   - Configurer les CORS pour accepter les requêtes Replit
+1. **Appliquer les Migrations SQL** (OBLIGATOIRE)
+   - Consultez `MIGRATION_SUPABASE.md` pour les instructions
+   - Exécutez les 3 migrations dans Supabase SQL Editor
+   - Créez votre premier compte admin
 
 2. **Tests**
-   - Tester la création de compte
-   - Tester la connexion
-   - Vérifier les abonnements
+   - Tester l'inscription et la connexion Supabase
+   - Créer un premier prono depuis le panneau admin
+   - Vérifier le système de parrainage
 
-3. **Déploiement**
-   - Publier via Replit Deployments pour une URL permanente
-   - Configurer un domaine personnalisé si besoin
+3. **Déploiement sur Vercel**
+   - Consultez `DEPLOYMENT.md` pour le guide complet
+   - Configurez les variables d'environnement Supabase
+   - Déployez automatiquement depuis GitHub
 
 ## Support et Documentation
 
-- Frontend déployé: Replit (ce workspace)
-- Backend: Render (à configurer)
-- Base de données: Supabase
-- Authentication: Firebase
+- **Frontend**: React + Vite (ce workspace Replit)
+- **Backend**: Supabase (Auth + Database + RLS)
+- **Déploiement**: Vercel (voir `DEPLOYMENT.md`)
+- **Migrations**: `supabase/migrations/` (voir `MIGRATION_SUPABASE.md`)
 
-## Notes de migration depuis Lovable
+## Notes de migration
 
+### Migration Lovable → Replit (21 Nov 2025)
 - ✅ Port changé de 8080 → 5000 (requis par Replit)
 - ✅ Host changé de `::` → `0.0.0.0`
 - ✅ `allowedHosts: true` ajouté à vite.config.ts
-- ✅ Firebase package installé
 - ✅ Alias `@assets` ajouté pour les assets
 - ✅ .gitignore mis à jour pour protéger .env
 - ✅ Toutes les dépendances npm installées
+
+### Migration Firebase → Supabase (21 Nov 2025)
+- ✅ Firebase Auth remplacé par Supabase Auth
+- ✅ Backend API Render remplacé par services Supabase directs
+- ✅ Hook `useSupabaseAuth` créé pour gérer l'authentification
+- ✅ Services Supabase (`supabase-services.ts`) créés pour CRUD
+- ✅ Hook `usePronos` migré vers Supabase
+- ✅ Migrations SQL créées (7 tables + RLS + triggers + indexes)
+- ✅ Guides de déploiement Vercel créés
 
 ## Préférences utilisateur
 - Langue: Français

@@ -1,5 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * IMPORTANT: Payment Services
+ * 
+ * Les services de paiement (supabasePaymentService) ne fonctionneront PAS avant :
+ * 1. Application des migrations SQL dans Supabase (voir MIGRATION_SUPABASE.md)
+ * 2. Régénération des types Supabase avec : npx supabase gen types typescript --project-id <votre-project-id>
+ * 
+ * Jusqu'à ces étapes, la table 'payments' n'existe pas dans les types générés TypeScript,
+ * causant des erreurs LSP. Ces erreurs sont normales et disparaîtront après migration.
+ */
+
 // Types
 export interface Prono {
   id: string;
@@ -45,19 +56,22 @@ export interface Subscription {
 }
 
 export interface Payment {
-  id: string;
+  id?: string;
   user_id: string;
   amount: number;
-  currency: string;
+  currency?: string; // Default: 'EUR'
   method: 'crypto' | 'mobile_money' | 'bank_transfer';
   crypto_address?: string;
   crypto_tx_hash?: string;
   mobile_number?: string;
   mobile_provider?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'processing';
+  status?: 'pending' | 'approved' | 'rejected' | 'processing'; // Default: 'pending'
   proof_image_url?: string;
   notes?: string;
-  created_at: string;
+  processed_by?: string;
+  processed_at?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Referral {
