@@ -6,12 +6,12 @@ import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 const PronosYesterday = () => {
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(yesterday);
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const filteredPronos = (pronos || []).filter((prono: any) => {
     if (prono.prono_type === 'free') return true;

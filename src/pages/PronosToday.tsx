@@ -6,12 +6,12 @@ import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 const PronosToday = () => {
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   // Filtrer les pronos selon le statut VIP de l'utilisateur
   const filteredPronos = (pronos || []).filter((prono: any) => {
