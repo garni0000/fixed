@@ -40,7 +40,7 @@ export default function ComboDetail() {
 
   const loadCombo = async () => {
     try {
-      const { data } = await supabaseComboService.getCombo(id!);
+      const { data } = await supabaseComboService.getComboById(id!);
       setCombo(data);
     } catch (error) {
       console.error('Error loading combo:', error);
