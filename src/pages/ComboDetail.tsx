@@ -85,62 +85,6 @@ export default function ComboDetail() {
   const hasAccess = tierHierarchy[userTier as keyof typeof tierHierarchy] >= 
                      tierHierarchy[combo.access_tier as keyof typeof tierHierarchy];
 
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container mx-auto px-4 py-8">
-          <Link to="/combos">
-            <Button variant="ghost" className="mb-6" data-testid="button-back">
-              <ArrowLeft className="mr-2" size={16} />
-              Retour aux combos
-            </Button>
-          </Link>
-
-          <Card className="max-w-2xl mx-auto p-12 text-center bg-primary/5 border-primary/20">
-            <Lock className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">Contenu Réservé {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]}</h2>
-            <p className="text-muted-foreground mb-8 text-lg">
-              Ce combo est réservé aux abonnés {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]}. 
-              Abonnez-vous pour accéder à tous nos combos premium.
-            </p>
-            
-            <div className="mb-8 p-6 bg-card rounded-lg text-left max-w-md mx-auto">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Titre</span>
-                  <span className="font-semibold">{combo.title}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Cote globale</span>
-                  <span className="text-primary font-bold text-lg">{combo.global_odds}</span>
-                </div>
-                <div className="flex justify-between items-center opacity-50">
-                  <span className="text-muted-foreground">Pronos</span>
-                  <div className="flex items-center gap-2">
-                    <Lock size={16} />
-                    <span>Verrouillé</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/pricing')}
-              className="gap-2"
-              data-testid="button-upgrade"
-            >
-              <TrendingUp size={20} />
-              Passer à {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]}
-            </Button>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
   const getStatusBadge = () => {
     switch (combo.status) {
       case 'won':
@@ -171,13 +115,22 @@ export default function ComboDetail() {
 
         <div className="max-w-4xl mx-auto">
           {combo.coupon_image_url && (
-            <Card className="mb-6 overflow-hidden">
+            <Card className="mb-6 overflow-hidden relative">
               <img
                 src={combo.coupon_image_url}
                 alt={combo.title}
-                className="w-full object-cover max-h-96"
+                className={`w-full object-cover max-h-96 ${!hasAccess ? 'blur-md' : ''}`}
                 data-testid="img-coupon"
               />
+              {!hasAccess && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="text-center text-white">
+                    <Lock className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-lg font-semibold">Image de coupon verrouillée</p>
+                    <p className="text-sm opacity-80">Passez à {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]} pour voir le détail</p>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
@@ -219,6 +172,45 @@ export default function ComboDetail() {
                   <div className="text-xl font-semibold text-green-500">{combo.potential_win || 0}€</div>
                 </div>
               </div>
+
+              {/* Section Code Coupon - Toujours visible mais verrouillée si pas d'accès */}
+              {combo.coupon_code ? (
+                <div className="mt-6 p-6 bg-secondary/30 rounded-lg border border-border">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Code Coupon
+                      </div>
+                      {hasAccess ? (
+                        <div className="text-xl font-mono font-bold text-primary select-all">
+                          {combo.coupon_code}
+                        </div>
+                      ) : (
+                        <div className="text-xl font-mono blur-sm select-none">
+                          XXXX-XXXX-XXXX
+                        </div>
+                      )}
+                    </div>
+                    {!hasAccess && (
+                      <Button 
+                        size="lg"
+                        onClick={() => navigate(`/pricing?plan=${combo.access_tier}`)}
+                        className="gap-2"
+                        data-testid="button-unlock-coupon"
+                      >
+                        <TrendingUp className="h-5 w-5" />
+                        Débloquer {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]}
+                      </Button>
+                    )}
+                  </div>
+                  {!hasAccess && (
+                    <p className="text-sm text-muted-foreground mt-4 text-center">
+                      ⚡ Passez à {TIER_LABELS[combo.access_tier as keyof typeof TIER_LABELS]} pour copier ce code et placer votre pari !
+                    </p>
+                  )}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 

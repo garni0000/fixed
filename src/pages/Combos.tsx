@@ -24,17 +24,9 @@ export default function Combos() {
     try {
       const { data } = await supabaseComboService.getCombos();
       
-      // Filter combos based on user subscription level
-      const userPlan = user?.subscription?.plan || 'free';
-      const tierHierarchy = { free: 0, basic: 1, pro: 2, vip: 3 };
-      const userTier = tierHierarchy[userPlan as keyof typeof tierHierarchy] || 0;
-
-      const accessibleCombos = data?.filter((combo: any) => {
-        const comboTier = tierHierarchy[combo.access_tier as keyof typeof tierHierarchy] || 0;
-        return comboTier <= userTier;
-      }) || [];
-
-      setCombos(accessibleCombos);
+      // ✅ NOUVEAU : Afficher TOUS les combos (teasing marketing)
+      // Les combos premium seront verrouillés dans la page de détail
+      setCombos(data || []);
     } catch (error) {
       console.error('Error loading combos:', error);
     } finally {
