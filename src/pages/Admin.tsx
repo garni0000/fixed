@@ -550,19 +550,17 @@ export default function Admin() {
       setLoading(true);
 
       // Créer le combo avec upload d'image optionnel
-      const { data, error } = await supabaseComboService.createCombo({
+      const { data } = await supabaseComboService.createCombo({
         title: comboForm.title,
         description: comboForm.description,
         global_odds: parseFloat(comboForm.global_odds),
         stake: parseFloat(comboForm.stake) || 0,
+        potential_win: parseFloat(comboForm.stake || '0') * parseFloat(comboForm.global_odds),
         access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
         match_date: comboForm.match_date || new Date().toISOString(),
-        status: 'pending',
-        prono_ids: comboForm.selectedPronoIds,
-        coupon_image: comboForm.couponImage || undefined
+        pronoIds: comboForm.selectedPronoIds,
+        couponImage: comboForm.couponImage || undefined
       });
-
-      if (error) throw error;
 
       toast({ 
         title: 'Succès ✓', 
