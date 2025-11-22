@@ -30,7 +30,7 @@ export default function Admin() {
   const [pronos, setPronos] = useState<any[]>([]);
   const [pronoForm, setPronoForm] = useState({
     title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-    tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'free', content: '', analysis: '', status: 'draft'
+    tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'basic', content: '', analysis: '', status: 'draft'
   });
   const [editingProno, setEditingProno] = useState<any>(null);
   const [isPronoDialogOpen, setIsPronoDialogOpen] = useState(false);
@@ -297,7 +297,12 @@ export default function Admin() {
           type: 'payment',
           amount: payment.amount,
           status: 'completed',
-          description: `Paiement pour abonnement ${payment.plan.toUpperCase()}`
+          metadata: {
+            description: `Paiement pour abonnement ${payment.plan.toUpperCase()}`,
+            plan: payment.plan,
+            payment_id: paymentId,
+            payment_method: payment.method
+          }
         }]);
 
       if (transactionError) {
@@ -427,7 +432,7 @@ export default function Admin() {
   const resetPronoForm = () => {
     setPronoForm({
       title: '', sport: '', competition: '', match_time: '', home_team: '', away_team: '',
-      tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'free', content: '', analysis: '', status: 'draft'
+      tip: '', odd: '', confidence: '', prono_type: 'safe', access_tier: 'basic', content: '', analysis: '', status: 'draft'
     });
     setEditingProno(null);
   };
@@ -454,7 +459,7 @@ export default function Admin() {
       odd: prono.odd.toString(),
       confidence: prono.confidence.toString(),
       prono_type: prono.prono_type,
-      access_tier: prono.access_tier || 'free',
+      access_tier: prono.access_tier || 'basic',
       content: prono.content || '',
       analysis: prono.analysis || '',
       status: prono.status
@@ -670,10 +675,9 @@ export default function Admin() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="free">FREE (Gratuit)</SelectItem>
-                                <SelectItem value="basic">BASIC (Abonnement Basic)</SelectItem>
-                                <SelectItem value="pro">PRO (Abonnement Pro)</SelectItem>
-                                <SelectItem value="vip">VIP (Abonnement VIP)</SelectItem>
+                                <SelectItem value="basic">BASIC (Abonnement Basic requis)</SelectItem>
+                                <SelectItem value="pro">PRO (Abonnement Pro requis)</SelectItem>
+                                <SelectItem value="vip">VIP (Abonnement VIP requis)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

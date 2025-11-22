@@ -70,11 +70,11 @@ Le système utilise **deux champs distincts** pour offrir flexibilité maximale 
 - **Utilisation** : Badge visuel, tri, filtrage par stratégie
 
 #### 2️⃣ Niveau d'Accès (`access_tier`) - Contrôle d'abonnement requis
-- **free** : Accessible à tous les utilisateurs (même non connectés)
-- **basic** : Abonnement Basic requis
+- **basic** : Abonnement Basic requis (niveau minimum)
 - **pro** : Abonnement Pro requis
 - **vip** : Abonnement VIP requis
 - **Utilisation** : Verrouillage du contenu, affichage filtré dans les listes
+- ⚠️ **Tous les pronos nécessitent un abonnement** - Aucun contenu gratuit disponible
 
 #### ✅ Protection Multi-Niveaux
 - **Frontend** :
