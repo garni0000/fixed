@@ -44,67 +44,18 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
-        {/* Accès Rapide - Navigation Mobile */}
-        <div className="mb-6">
-          <div className="grid grid-cols-4 gap-2 sm:gap-3">
-            <button
-              onClick={() => navigate('/pronos/today')}
-              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
-              data-testid="quick-access-pronos"
-            >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <span className="text-xs font-medium">Pronos</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/combos')}
-              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
-              data-testid="quick-access-combos"
-            >
-              <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-yellow-500" />
-              </div>
-              <span className="text-xs font-medium">Combos</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/pricing')}
-              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
-              data-testid="quick-access-pricing"
-            >
-              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-green-500" />
-              </div>
-              <span className="text-xs font-medium">Offres</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/account')}
-              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
-              data-testid="quick-access-account"
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <User className="h-5 w-5 text-purple-500" />
-              </div>
-              <span className="text-xs font-medium">Compte</span>
-            </button>
-          </div>
-
-          {/* Bouton Admin - visible uniquement pour les admins */}
-          {user?.isAdmin && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="w-full mt-3 flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover-elevate active-elevate-2"
-              data-testid="quick-access-admin"
-            >
-              <Award className="h-5 w-5 text-red-500" />
-              <span className="text-sm font-semibold text-red-500">Panneau Admin</span>
-            </button>
-          )}
-        </div>
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 pb-24">
+        {/* Bouton Admin - visible uniquement pour les admins */}
+        {user?.isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-full mb-6 flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover-elevate active-elevate-2"
+            data-testid="quick-access-admin"
+          >
+            <Award className="h-5 w-5 text-red-500" />
+            <span className="text-sm font-semibold text-red-500">Panneau Admin</span>
+          </button>
+        )}
 
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
@@ -186,6 +137,47 @@ const Dashboard = () => {
       </main>
 
       <Footer />
+
+      {/* Bottom Navigation Bar - Fixed */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 md:hidden">
+        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+          <button
+            onClick={() => navigate('/pronos/today')}
+            className="flex flex-col items-center gap-1 py-2 rounded-lg hover-elevate active-elevate-2"
+            data-testid="bottom-nav-pronos"
+          >
+            <Calendar className="h-6 w-6 text-primary" />
+            <span className="text-xs font-medium">Pronos</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/combos')}
+            className="flex flex-col items-center gap-1 py-2 rounded-lg hover-elevate active-elevate-2"
+            data-testid="bottom-nav-combos"
+          >
+            <Sparkles className="h-6 w-6 text-yellow-500" />
+            <span className="text-xs font-medium">Combos</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/pricing')}
+            className="flex flex-col items-center gap-1 py-2 rounded-lg hover-elevate active-elevate-2"
+            data-testid="bottom-nav-pricing"
+          >
+            <CreditCard className="h-6 w-6 text-green-500" />
+            <span className="text-xs font-medium">Offres</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/account')}
+            className="flex flex-col items-center gap-1 py-2 rounded-lg hover-elevate active-elevate-2"
+            data-testid="bottom-nav-account"
+          >
+            <User className="h-6 w-6 text-purple-500" />
+            <span className="text-xs font-medium">Compte</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };
