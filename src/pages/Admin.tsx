@@ -601,9 +601,10 @@ export default function Admin() {
       // Recharger la liste des combos
       loadCombos();
     } catch (error: any) {
-      console.error('Error creating combo:', error);
+      console.error('❌ Error creating combo:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       toast({ 
-        title: 'Erreur', 
+        title: 'Erreur Combo', 
         description: error.message || 'Impossible de créer le combo.', 
         variant: 'destructive' 
       });
