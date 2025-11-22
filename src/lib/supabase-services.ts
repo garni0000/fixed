@@ -75,6 +75,29 @@ export interface Payment {
   updated_at?: string;
 }
 
+export interface Combo {
+  id: string;
+  title: string;
+  description?: string;
+  coupon_image_url?: string;
+  global_odds: number;
+  stake?: number;
+  potential_win?: number;
+  status: 'pending' | 'won' | 'lost';
+  access_tier: 'free' | 'basic' | 'pro' | 'vip';
+  match_date: string;
+  created_at: string;
+  updated_at: string;
+  pronos?: Prono[]; // Pronos liés au combo (chargés via join)
+}
+
+export interface ComboProno {
+  id: string;
+  combo_id: string;
+  prono_id: string;
+  created_at: string;
+}
+
 export interface Referral {
   id: string;
   referrer_id: string;
@@ -502,6 +525,266 @@ export const supabaseAdminService = {
       return { data };
     } catch (error) {
       console.error('Error submitting payment:', error);
+      throw error;
+    }
+  },
+};
+
+// Combo Service (Paris Combinés)
+export const supabaseComboService = {
+  // Get all combos with their pronos
+  getCombos: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('combos')
+        .select(`
+          *,
+          combo_pronos (
+            prono_id,
+            pronos (*)
+          )
+        `)
+        .order('match_date', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to include pronos array
+      const combos = data?.map(combo => ({
+        ...combo,
+        pronos: combo.combo_pronos?.map((cp: any) => cp.pronos).filter(Boolean) || []
+      })) || [];
+
+      return { data: combos };
+    } catch (error) {
+      console.error('Error fetching combos:', error);
+      throw error;
+    }
+  },
+
+  // Get combo by ID with pronos
+  getComboById: async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('combos')
+        .select(`
+          *,
+          combo_pronos (
+            prono_id,
+            pronos (*)
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      // Transform data to include pronos array
+      const combo = {
+        ...data,
+        pronos: data.combo_pronos?.map((cp: any) => cp.pronos).filter(Boolean) || []
+      };
+
+      return { data: combo };
+    } catch (error) {
+      console.error('Error fetching combo:', error);
+      throw error;
+    }
+  },
+
+  // Create new combo with image upload
+  createCombo: async (comboData: {
+    title: string;
+    description?: string;
+    global_odds: number;
+    stake?: number;
+    potential_win?: number;
+    access_tier: 'free' | 'basic' | 'pro' | 'vip';
+    match_date: string;
+    pronoIds: string[];
+    couponImage?: File;
+  }) => {
+    try {
+      let couponImageUrl: string | null = null;
+
+      // Upload coupon image if provided
+      if (comboData.couponImage) {
+        const fileExt = comboData.couponImage.name.split('.').pop();
+        const fileName = `combo-${Date.now()}.${fileExt}`;
+        const filePath = `combo-coupons/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('combo-coupons')
+          .upload(filePath, comboData.couponImage, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Error uploading coupon image:', uploadError);
+          throw new Error('Erreur lors de l\'upload de l\'image du coupon');
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('combo-coupons')
+          .getPublicUrl(filePath);
+
+        couponImageUrl = publicUrl;
+      }
+
+      // Create combo
+      const { data: combo, error: comboError } = await supabase
+        .from('combos')
+        .insert([{
+          title: comboData.title,
+          description: comboData.description,
+          coupon_image_url: couponImageUrl,
+          global_odds: comboData.global_odds,
+          stake: comboData.stake || 0,
+          potential_win: comboData.potential_win || 0,
+          status: 'pending',
+          access_tier: comboData.access_tier,
+          match_date: comboData.match_date,
+        }])
+        .select()
+        .single();
+
+      if (comboError) throw comboError;
+
+      // Link pronos to combo
+      if (comboData.pronoIds.length > 0) {
+        const linkData = comboData.pronoIds.map(pronoId => ({
+          combo_id: combo.id,
+          prono_id: pronoId
+        }));
+
+        const { error: linkError } = await supabase
+          .from('combo_pronos')
+          .insert(linkData);
+
+        if (linkError) throw linkError;
+      }
+
+      return { data: combo };
+    } catch (error) {
+      console.error('Error creating combo:', error);
+      throw error;
+    }
+  },
+
+  // Update combo
+  updateCombo: async (id: string, updates: {
+    title?: string;
+    description?: string;
+    global_odds?: number;
+    stake?: number;
+    potential_win?: number;
+    status?: 'pending' | 'won' | 'lost';
+    access_tier?: 'free' | 'basic' | 'pro' | 'vip';
+    match_date?: string;
+    couponImage?: File;
+  }) => {
+    try {
+      let couponImageUrl: string | undefined;
+
+      // Upload new coupon image if provided
+      if (updates.couponImage) {
+        const fileExt = updates.couponImage.name.split('.').pop();
+        const fileName = `combo-${Date.now()}.${fileExt}`;
+        const filePath = `combo-coupons/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('combo-coupons')
+          .upload(filePath, updates.couponImage, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Error uploading coupon image:', uploadError);
+          throw new Error('Erreur lors de l\'upload de l\'image du coupon');
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('combo-coupons')
+          .getPublicUrl(filePath);
+
+        couponImageUrl = publicUrl;
+      }
+
+      // Prepare update data
+      const updateData: any = {};
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.global_odds !== undefined) updateData.global_odds = updates.global_odds;
+      if (updates.stake !== undefined) updateData.stake = updates.stake;
+      if (updates.potential_win !== undefined) updateData.potential_win = updates.potential_win;
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.access_tier !== undefined) updateData.access_tier = updates.access_tier;
+      if (updates.match_date !== undefined) updateData.match_date = updates.match_date;
+      if (couponImageUrl !== undefined) updateData.coupon_image_url = couponImageUrl;
+
+      const { data, error } = await supabase
+        .from('combos')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data };
+    } catch (error) {
+      console.error('Error updating combo:', error);
+      throw error;
+    }
+  },
+
+  // Delete combo
+  deleteCombo: async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('combos')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting combo:', error);
+      throw error;
+    }
+  },
+
+  // Add prono to combo
+  addPronoToCombo: async (comboId: string, pronoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('combo_pronos')
+        .insert([{ combo_id: comboId, prono_id: pronoId }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data };
+    } catch (error) {
+      console.error('Error adding prono to combo:', error);
+      throw error;
+    }
+  },
+
+  // Remove prono from combo
+  removePronoFromCombo: async (comboId: string, pronoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('combo_pronos')
+        .delete()
+        .eq('combo_id', comboId)
+        .eq('prono_id', pronoId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing prono from combo:', error);
       throw error;
     }
   },

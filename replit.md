@@ -19,6 +19,38 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - **Activation automatique d'abonnement** : Soumission de paiement → Approbation admin → Activation
 - Toutes les dépendances installées
 
+### 🎲 Système de Paris Combinés (Combos)
+**Date d'implémentation**: 22 Novembre 2025  
+**Statut**: ⚠️ MVP créé - Nécessite migrations SQL et améliorations
+
+#### Fonctionnalités Implémentées
+- Table SQL `combos` avec support image de coupon
+- Table de liaison `combo_pronos` (many-to-many)
+- Services Supabase CRUD complets
+- Upload d'image de coupon vers Supabase Storage
+- Page dédiée `/combos` pour afficher les combos
+- Filtrage basique par niveau d'abonnement
+- Route ajoutée dans App.tsx
+- Lien "Combos" dans navigation (desktop + mobile)
+
+#### Limitations Connues (À Corriger)
+⚠️ **Filtrage par abonnement** : Le hook `useSupabaseAuth` n'expose pas `user.subscription.plan`, donc tous les utilisateurs sont traités comme "free" → Les combos VIP/PRO/BASIC ne sont pas verrouillés correctement
+
+⚠️ **Validation des cotes** : Le système accepte n'importe quelle cote sans vérification contre les pronos liés → Risque de cotes incohérentes
+
+⚠️ **Bucket Storage manquant** : Le bucket `combo-coupons` doit être créé manuellement dans Supabase Storage avec accès public
+
+⚠️ **Admin CRUD incomplet** : Pas d'interface admin pour modifier/supprimer les combos (seulement stub dans Admin.tsx)
+
+⚠️ **RLS Policy** : Les policies utilisent `auth.uid()` mais le check admin utilise les emails → Peut causer des problèmes d'autorisation
+
+#### Prochaines Étapes Recommandées
+1. Étendre `useSupabaseAuth` pour exposer `subscription.plan`
+2. Ajouter validation serveur des cotes (recalcul automatique)
+3. Documenter la création du bucket `combo-coupons`
+4. Compléter l'interface admin (édition, suppression, changement de statut)
+5. Aligner les RLS policies avec le système de vérification admin
+
 ### 💳 Système d'Activation Automatique des Abonnements
 **Date d'implémentation**: 22 Novembre 2025  
 **Statut**: ✅ Fonctionnel avec préservation du temps restant

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Trophy, Menu, X } from 'lucide-react';
+import { Trophy, Menu, X, Home, BarChart3, CreditCard, User, Gift, LogOut, Star } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -8,127 +8,189 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, logout } = useSupabaseAuth();
 
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+  };
+
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-card/95">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Trophy className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold vip-gradient bg-clip-text text-transparent">
+            <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <span className="text-lg sm:text-2xl font-bold vip-gradient bg-clip-text text-transparent">
               FixedPronos
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/dashboard" className="text-sm text-foreground hover:text-primary transition-colors">
                   Dashboard
                 </Link>
-                <Link to="/pronos/today" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/pronos/today" className="text-sm text-foreground hover:text-primary transition-colors">
                   Pronos
                 </Link>
-                <Link to="/pricing" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/combos" className="text-sm text-foreground hover:text-primary transition-colors">
+                  Combos
+                </Link>
+                <Link to="/pricing" className="text-sm text-foreground hover:text-primary transition-colors">
                   Tarifs
                 </Link>
-                <Link to="/account" className="text-foreground hover:text-primary transition-colors">
-                  Mon Compte
+                <Link to="/account" className="text-sm text-foreground hover:text-primary transition-colors">
+                  Compte
                 </Link>
-                <Link to="/referral" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/referral" className="text-sm text-foreground hover:text-primary transition-colors">
                   Parrainage
                 </Link>
-                <Button variant="outline" onClick={logout}>
+                <Button variant="outline" size="sm" onClick={logout}>
                   Déconnexion
                 </Button>
               </>
             ) : (
               <>
-                <Link to="/pricing" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/pricing" className="text-sm text-foreground hover:text-primary transition-colors">
                   Tarifs
                 </Link>
                 <Link to="/auth/login">
-                  <Button variant="outline">Connexion</Button>
+                  <Button variant="outline" size="sm">Connexion</Button>
                 </Link>
                 <Link to="/auth/register">
-                  <Button className="btn-vip">S'inscrire</Button>
+                  <Button className="btn-vip" size="sm">S'inscrire</Button>
                 </Link>
               </>
             )}
           </nav>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-foreground"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            data-testid="button-menu-toggle"
           >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <nav className="md:hidden py-4 space-y-4 border-t border-border">
+        {/* Mobile Navigation - Slide Down Menu */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <nav className="py-4 space-y-1 border-t border-border">
             {isAuthenticated ? (
               <>
-                <Link 
-                  to="/dashboard" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-dashboard-mobile"
                 >
-                  Dashboard
+                  <Home className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Dashboard</span>
                 </Link>
-                <Link 
-                  to="/pronos/today" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+
+                <Link
+                  to="/pronos/today"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-pronos-mobile"
                 >
-                  Pronos
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Pronos du Jour</span>
                 </Link>
-                <Link 
-                  to="/pricing" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+
+                <Link
+                  to="/combos"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-combos-mobile"
                 >
-                  Tarifs
+                  <Star className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Paris Combinés</span>
                 </Link>
-                <Link 
-                  to="/account" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+
+                <div className="h-px bg-border my-2" />
+
+                <Link
+                  to="/pricing"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-pricing-mobile"
                 >
-                  Mon Compte
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Tarifs VIP</span>
                 </Link>
-                <Link 
-                  to="/referral" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+
+                <Link
+                  to="/account"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-account-mobile"
                 >
-                  Parrainage
+                  <User className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Mon Compte</span>
                 </Link>
-                <Button variant="outline" onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full">
-                  Déconnexion
-                </Button>
+
+                <Link
+                  to="/referral"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-referral-mobile"
+                >
+                  <Gift className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Parrainage</span>
+                </Link>
+
+                <div className="h-px bg-border my-2" />
+
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-3 py-3 rounded-md text-destructive hover:bg-destructive/10 transition-colors"
+                  data-testid="button-logout-mobile"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-medium">Déconnexion</span>
+                </button>
               </>
             ) : (
               <>
-                <Link 
-                  to="/pricing" 
-                  className="block py-2 text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+                <Link
+                  to="/pricing"
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-foreground hover-elevate active-elevate-2"
+                  onClick={closeMenu}
+                  data-testid="link-pricing-mobile"
                 >
-                  Tarifs
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Découvrir les Tarifs</span>
                 </Link>
-                <Link to="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Connexion</Button>
+
+                <div className="h-px bg-border my-3" />
+
+                <Link to="/auth/login" onClick={closeMenu} className="block" data-testid="link-login-mobile">
+                  <Button variant="outline" className="w-full justify-start gap-2" size="lg">
+                    Connexion
+                  </Button>
                 </Link>
-                <Link to="/auth/register" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="btn-vip w-full">S'inscrire</Button>
+
+                <Link to="/auth/register" onClick={closeMenu} className="block mt-2" data-testid="link-register-mobile">
+                  <Button className="btn-vip w-full justify-start gap-2" size="lg">
+                    S'inscrire Gratuitement
+                  </Button>
                 </Link>
               </>
             )}
           </nav>
-        )}
+        </div>
       </div>
     </header>
   );

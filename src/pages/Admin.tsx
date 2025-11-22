@@ -15,6 +15,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Loader2, Plus, Edit, Trash2, Users, TrendingUp, DollarSign, CreditCard, Check, X, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { supabaseComboService } from '@/lib/supabase-services';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -46,12 +48,22 @@ export default function Admin() {
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
+  // Combos
+  const [combos, setCombos] = useState<any[]>([]);
+  const [comboForm, setComboForm] = useState({
+    title: '', description: '', global_odds: '', stake: '', access_tier: 'free', match_date: '',
+    selectedPronoIds: [] as string[], couponImage: null as File | null
+  });
+  const [editingCombo, setEditingCombo] = useState<any>(null);
+  const [isComboDialogOpen, setIsComboDialogOpen] = useState(false);
+
   useEffect(() => {
     checkAdminAccess();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'pronos' && isAdmin) loadPronos();
+    if (activeTab === 'combos' && isAdmin) { loadCombos(); loadPronos(); } // Charger combos + pronos pour sélection
     if (activeTab === 'users' && isAdmin) loadUsers();
     if (activeTab === 'payments' && isAdmin) loadPayments();
   }, [activeTab, isAdmin]);
@@ -127,6 +139,16 @@ export default function Admin() {
     } catch (error) {
       console.error('Error loading pronos:', error);
       toast({ title: 'Erreur', description: 'Impossible de charger les pronos.', variant: 'destructive' });
+    }
+  };
+
+  const loadCombos = async () => {
+    try {
+      const { data } = await supabaseComboService.getCombos();
+      setCombos(data || []);
+    } catch (error) {
+      console.error('Error loading combos:', error);
+      // Silently fail if table doesn't exist yet (waiting for migration)
     }
   };
 
@@ -534,9 +556,10 @@ export default function Admin() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="pronos">Pronos</TabsTrigger>
+            <TabsTrigger value="combos">Combos</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
             <TabsTrigger value="payments">Paiements</TabsTrigger>
           </TabsList>

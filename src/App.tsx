@@ -16,6 +16,7 @@ import Account from "./pages/Account";
 import Referral from "./pages/Referral";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
+import Combos from "./pages/Combos";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/pronos/yesterday" element={<PronosYesterday />} />
           <Route path="/pronos/before-yesterday" element={<PronosBeforeYesterday />} />
           <Route path="/pronos/:id" element={<PronoDetail />} />
+          <Route path="/combos" element={<Combos />} />
           <Route path="/account" element={<Account />} />
           <Route path="/referral" element={<Referral />} />
           <Route path="/pricing" element={<Pricing />} />
