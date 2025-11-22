@@ -39,12 +39,11 @@ const Index = () => {
               <span className="text-primary font-semibold">Plateforme VIP Premium</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Accès <span className="vip-gradient bg-clip-text text-transparent">VIP</span> aux meilleurs
-              <br />pronostics du marché
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              Accès <span className="vip-gradient bg-clip-text text-transparent">VIP</span> aux meilleurs pronostics du marché
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto px-4">
               Rejoignez l'élite des parieurs avec nos analyses professionnelles et nos pronostics à fort taux de réussite.
             </p>
             
@@ -65,9 +64,9 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-card/50">
+      <section className="py-12 sm:py-20 px-4 bg-card/50">
         <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12">
             Pourquoi choisir <span className="vip-gradient bg-clip-text text-transparent">FixedPronos</span> ?
           </h2>
           
@@ -106,15 +105,15 @@ const Index = () => {
       </section>
 
       {/* Today's Pronos */}
-      <section className="py-20 px-4">
+      <section className="py-12 sm:py-20 px-4">
         <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12">
             <div>
-              <h2 className="text-4xl font-bold mb-2">Pronos du jour</h2>
-              <p className="text-muted-foreground">Découvrez nos analyses du {new Date().toLocaleDateString('fr-FR')}</p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Pronos du jour</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">Découvrez nos analyses du {new Date().toLocaleDateString('fr-FR')}</p>
             </div>
             <Link to="/pronos/today">
-              <Button variant="outline">Voir tout</Button>
+              <Button variant="outline" className="w-full sm:w-auto">Voir tout</Button>
             </Link>
           </div>
 
@@ -148,36 +147,36 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 px-4 bg-card/50">
+      <section className="py-12 sm:py-20 px-4 bg-card/50">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">80%</div>
-              <p className="text-muted-foreground">Taux de réussite</p>
+              <div className="text-4xl sm:text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">80%</div>
+              <p className="text-sm sm:text-base text-muted-foreground">Taux de réussite</p>
             </div>
             <div>
-              <div className="text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">10K+</div>
-              <p className="text-muted-foreground">Membres VIP actifs</p>
+              <div className="text-4xl sm:text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">10K+</div>
+              <p className="text-sm sm:text-base text-muted-foreground">Membres VIP actifs</p>
             </div>
             <div>
-              <div className="text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">500+</div>
-              <p className="text-muted-foreground">Pronos par mois</p>
+              <div className="text-4xl sm:text-5xl font-bold vip-gradient bg-clip-text text-transparent mb-2">500+</div>
+              <p className="text-sm sm:text-base text-muted-foreground">Pronos par mois</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 sm:py-20 px-4">
         <div className="container mx-auto">
-          <div className="card-premium p-12 text-center max-w-3xl mx-auto">
-            <Star className="text-primary mx-auto mb-6" size={48} />
-            <h2 className="text-4xl font-bold mb-4">Prêt à rejoindre l'élite ?</h2>
-            <p className="text-xl text-muted-foreground mb-8">
+          <div className="card-premium p-6 sm:p-12 text-center max-w-3xl mx-auto">
+            <Star className="text-primary mx-auto mb-4 sm:mb-6" size={48} />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Prêt à rejoindre l'élite ?</h2>
+            <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
               Accédez aux pronostics VIP et commencez à gagner dès aujourd'hui.
             </p>
             <Link to="/auth/register">
-              <Button size="lg" className="btn-vip text-lg px-12 py-6">
+              <Button size="lg" className="btn-vip text-base sm:text-lg px-8 sm:px-12 py-6 w-full sm:w-auto">
                 S'inscrire maintenant
               </Button>
             </Link>

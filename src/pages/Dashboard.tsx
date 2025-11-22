@@ -41,48 +41,48 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            Bienvenue, <span className="vip-gradient bg-clip-text text-transparent">{user?.firstName || 'Champion'}</span> 👋
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+            Bienvenue, <span className="vip-gradient bg-clip-text text-transparent">{user?.firstName || 'Champion'}</span>
           </h1>
-          <p className="text-muted-foreground">Voici votre tableau de bord VIP</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Voici votre tableau de bord VIP</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="card-premium p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Target className="text-primary" size={32} />
-              <span className="text-sm text-muted-foreground">Paris totaux</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
+          <div className="card-premium p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <Target className="text-primary" size={24} />
+              <span className="text-xs sm:text-sm text-muted-foreground">Paris totaux</span>
             </div>
-            <div className="text-3xl font-bold">{stats.totalBets}</div>
+            <div className="text-2xl sm:text-3xl font-bold">{stats.totalBets}</div>
           </div>
 
-          <div className="card-premium p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Award className="text-success" size={32} />
-              <span className="text-sm text-muted-foreground">Paris gagnés</span>
+          <div className="card-premium p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <Award className="text-success" size={24} />
+              <span className="text-xs sm:text-sm text-muted-foreground">Paris gagnés</span>
             </div>
-            <div className="text-3xl font-bold text-success">{stats.wonBets}</div>
+            <div className="text-2xl sm:text-3xl font-bold text-success">{stats.wonBets}</div>
           </div>
 
-          <div className="card-premium p-6">
-            <div className="flex items-center justify-between mb-4">
-              <TrendingUp className="text-primary" size={32} />
-              <span className="text-sm text-muted-foreground">Taux de réussite</span>
+          <div className="card-premium p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <TrendingUp className="text-primary" size={24} />
+              <span className="text-xs sm:text-sm text-muted-foreground">Taux de réussite</span>
             </div>
-            <div className="text-3xl font-bold vip-gradient bg-clip-text text-transparent">
+            <div className="text-2xl sm:text-3xl font-bold vip-gradient bg-clip-text text-transparent">
               {stats.winRate.toFixed(1)}%
             </div>
           </div>
 
-          <div className="card-premium p-6">
-            <div className="flex items-center justify-between mb-4">
-              <DollarSign className="text-primary" size={32} />
-              <span className="text-sm text-muted-foreground">Profit total</span>
+          <div className="card-premium p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <DollarSign className="text-primary" size={24} />
+              <span className="text-xs sm:text-sm text-muted-foreground">Profit total</span>
             </div>
-            <div className="text-3xl font-bold text-success">
+            <div className="text-2xl sm:text-3xl font-bold text-success">
               +{stats.totalProfit.toFixed(2)}€
             </div>
           </div>
@@ -90,7 +90,7 @@ const Dashboard = () => {
 
         {/* Today's Pronos */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-6">Pronos du jour</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Pronos du jour</h2>
           
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

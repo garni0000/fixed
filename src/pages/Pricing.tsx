@@ -80,26 +80,26 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
+    <div className="min-h-screen bg-background py-8 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Choisissez votre plan
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-4">
             Investissez dans votre succès avec nos pronostics premium
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
           {plans.map((plan) => (
             <Card
               key={plan.id}
               className={`relative ${
                 plan.popular
-                  ? 'border-primary shadow-lg shadow-primary/20 scale-105'
+                  ? 'border-primary shadow-lg shadow-primary/20 md:scale-105'
                   : 'border-border'
               }`}
             >
@@ -110,13 +110,13 @@ export default function Pricing() {
               )}
               
               <CardHeader>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
+                <CardDescription className="text-sm">{plan.description}</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">
+                  <span className="text-3xl sm:text-4xl font-bold text-foreground">
                     {plan.price}€
                   </span>
-                  <span className="text-muted-foreground">/{plan.period}</span>
+                  <span className="text-sm sm:text-base text-muted-foreground">/{plan.period}</span>
                 </div>
               </CardHeader>
 
