@@ -536,6 +536,60 @@ export default function Admin() {
     }
   };
 
+  const handleCreateCombo = async () => {
+    try {
+      if (!comboForm.title || !comboForm.global_odds || comboForm.selectedPronoIds.length === 0) {
+        toast({ 
+          title: 'Validation', 
+          description: 'Veuillez remplir tous les champs requis et sélectionner au moins un prono.', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      // Créer le combo avec upload d'image optionnel
+      const { data, error } = await supabaseComboService.createCombo({
+        title: comboForm.title,
+        description: comboForm.description,
+        global_odds: parseFloat(comboForm.global_odds),
+        stake: parseFloat(comboForm.stake) || 0,
+        access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
+        match_date: comboForm.match_date || new Date().toISOString(),
+        status: 'pending',
+        prono_ids: comboForm.selectedPronoIds,
+        coupon_image: comboForm.couponImage || undefined
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Succès ✓', 
+        description: `Combo "${comboForm.title}" créé avec succès!` 
+      });
+
+      // Réinitialiser le formulaire
+      setComboForm({
+        title: '', description: '', global_odds: '', stake: '', 
+        access_tier: 'free', match_date: '',
+        selectedPronoIds: [], couponImage: null
+      });
+
+      // Recharger la liste des combos
+      loadCombos();
+    } catch (error: any) {
+      console.error('Error creating combo:', error);
+      toast({ 
+        title: 'Erreur', 
+        description: error.message || 'Impossible de créer le combo.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1055,6 +1109,219 @@ export default function Admin() {
                                 </div>
                               </DialogContent>
                             </Dialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="combos" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Créer un Paris Combiné</CardTitle>
+                <CardDescription>Sélectionnez plusieurs pronos pour créer un combo</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div>
+                    <Label htmlFor="combo-title">Titre du Combo</Label>
+                    <Input
+                      id="combo-title"
+                      placeholder="Ex: Triple VIP du Weekend"
+                      value={comboForm.title}
+                      onChange={(e) => setComboForm({ ...comboForm, title: e.target.value })}
+                      data-testid="input-combo-title"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="combo-description">Description</Label>
+                    <Textarea
+                      id="combo-description"
+                      placeholder="Description du combo..."
+                      value={comboForm.description}
+                      onChange={(e) => setComboForm({ ...comboForm, description: e.target.value })}
+                      data-testid="input-combo-description"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="combo-odds">Cote Globale</Label>
+                      <Input
+                        id="combo-odds"
+                        type="number"
+                        step="0.01"
+                        placeholder="Ex: 5.50"
+                        value={comboForm.global_odds}
+                        onChange={(e) => setComboForm({ ...comboForm, global_odds: e.target.value })}
+                        data-testid="input-combo-odds"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="combo-stake">Mise Recommandée (€)</Label>
+                      <Input
+                        id="combo-stake"
+                        type="number"
+                        step="0.01"
+                        placeholder="Ex: 10"
+                        value={comboForm.stake}
+                        onChange={(e) => setComboForm({ ...comboForm, stake: e.target.value })}
+                        data-testid="input-combo-stake"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="combo-access-tier">Niveau d'Accès</Label>
+                      <Select value={comboForm.access_tier} onValueChange={(value) => setComboForm({ ...comboForm, access_tier: value })}>
+                        <SelectTrigger id="combo-access-tier" data-testid="select-combo-access-tier">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">FREE - Tous les utilisateurs</SelectItem>
+                          <SelectItem value="basic">BASIC - Abonnés Basic+</SelectItem>
+                          <SelectItem value="pro">PRO - Abonnés Pro+</SelectItem>
+                          <SelectItem value="vip">VIP - Abonnés VIP uniquement</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="combo-match-date">Date du Match</Label>
+                      <Input
+                        id="combo-match-date"
+                        type="datetime-local"
+                        value={comboForm.match_date}
+                        onChange={(e) => setComboForm({ ...comboForm, match_date: e.target.value })}
+                        data-testid="input-combo-match-date"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Image du Coupon (optionnel)</Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setComboForm({ ...comboForm, couponImage: e.target.files?.[0] || null })}
+                      data-testid="input-combo-coupon-image"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Sélectionner les Pronos à Combiner</Label>
+                    <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
+                      {pronos.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Aucun prono disponible</p>
+                      ) : (
+                        pronos.map((prono) => (
+                          <div key={prono.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`prono-${prono.id}`}
+                              checked={comboForm.selectedPronoIds.includes(prono.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setComboForm({ ...comboForm, selectedPronoIds: [...comboForm.selectedPronoIds, prono.id] });
+                                } else {
+                                  setComboForm({ ...comboForm, selectedPronoIds: comboForm.selectedPronoIds.filter(id => id !== prono.id) });
+                                }
+                              }}
+                              data-testid={`checkbox-prono-${prono.id}`}
+                            />
+                            <label
+                              htmlFor={`prono-${prono.id}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {prono.title} - {prono.home_team} vs {prono.away_team} @ {prono.odd}
+                            </label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {comboForm.selectedPronoIds.length} prono(s) sélectionné(s)
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleCreateCombo}
+                    disabled={!comboForm.title || !comboForm.global_odds || comboForm.selectedPronoIds.length === 0}
+                    data-testid="button-create-combo"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Créer le Combo
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Combos Existants</CardTitle>
+                <CardDescription>Liste de tous les paris combinés</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Titre</TableHead>
+                      <TableHead>Cote</TableHead>
+                      <TableHead>Mise</TableHead>
+                      <TableHead>Niveau</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Pronos</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {combos.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          Aucun combo créé
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      combos.map((combo) => (
+                        <TableRow key={combo.id}>
+                          <TableCell className="font-medium">{combo.title}</TableCell>
+                          <TableCell>{combo.global_odds}</TableCell>
+                          <TableCell>{combo.stake}€</TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              combo.access_tier === 'vip' ? 'default' :
+                              combo.access_tier === 'pro' ? 'secondary' :
+                              combo.access_tier === 'basic' ? 'outline' : 'secondary'
+                            }>
+                              {combo.access_tier.toUpperCase()}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              combo.status === 'won' ? 'default' :
+                              combo.status === 'lost' ? 'destructive' : 'secondary'
+                            }>
+                              {combo.status === 'won' ? 'Gagné' : combo.status === 'lost' ? 'Perdu' : 'En cours'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {combo.combo_pronos?.length || 0} pronos
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="ghost" disabled>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" disabled>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
