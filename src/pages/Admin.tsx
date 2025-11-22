@@ -1344,56 +1344,32 @@ export default function Admin() {
                   </div>
 
                   <div>
-                    <Label>Image du Coupon (optionnel)</Label>
+                    <Label htmlFor="combo-coupon-code">Code Coupon (optionnel)</Label>
+                    <Input
+                      id="combo-coupon-code"
+                      placeholder="Ex: BET123456"
+                      value={comboForm.coupon_code}
+                      onChange={(e) => setComboForm({ ...comboForm, coupon_code: e.target.value })}
+                      data-testid="input-combo-coupon-code"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Code à copier-coller chez le bookmaker</p>
+                  </div>
+
+                  <div>
+                    <Label>Image du Coupon ⚠️ OBLIGATOIRE</Label>
                     <Input
                       type="file"
                       accept="image/*"
                       onChange={(e) => setComboForm({ ...comboForm, couponImage: e.target.files?.[0] || null })}
                       data-testid="input-combo-coupon-image"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">L'image doit contenir tous les matchs du combo</p>
                   </div>
-
-                  {!editingCombo && (
-                    <div>
-                      <Label>Sélectionner les Pronos à Combiner</Label>
-                      <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
-                        {pronos.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">Aucun prono disponible</p>
-                        ) : (
-                          pronos.map((prono) => (
-                            <div key={prono.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`prono-${prono.id}`}
-                                checked={comboForm.selectedPronoIds.includes(prono.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setComboForm({ ...comboForm, selectedPronoIds: [...comboForm.selectedPronoIds, prono.id] });
-                                  } else {
-                                    setComboForm({ ...comboForm, selectedPronoIds: comboForm.selectedPronoIds.filter(id => id !== prono.id) });
-                                  }
-                                }}
-                                data-testid={`checkbox-prono-${prono.id}`}
-                              />
-                              <label
-                                htmlFor={`prono-${prono.id}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                {prono.title} - {prono.home_team} vs {prono.away_team} @ {prono.odd}
-                              </label>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {comboForm.selectedPronoIds.length} prono(s) sélectionné(s)
-                      </p>
-                    </div>
-                  )}
 
                   <div className="flex gap-2">
                     <Button
                       onClick={editingCombo ? handleUpdateCombo : handleCreateCombo}
-                      disabled={!comboForm.title || !comboForm.global_odds || !comboForm.match_date || (!editingCombo && comboForm.selectedPronoIds.length === 0)}
+                      disabled={!comboForm.title || !comboForm.global_odds || !comboForm.stake || !comboForm.match_date || (!editingCombo && !comboForm.couponImage)}
                       data-testid={editingCombo ? "button-update-combo" : "button-create-combo"}
                     >
                       {editingCombo ? (
@@ -1414,9 +1390,10 @@ export default function Admin() {
                         onClick={() => {
                           setEditingCombo(null);
                           setComboForm({
-                            title: '', description: '', global_odds: '', stake: '', 
+                            title: '', description: '', coupon_code: '',
+                            global_odds: '', stake: '10', potential_win: '',
                             access_tier: 'free', match_date: '',
-                            selectedPronoIds: [], couponImage: null
+                            couponImage: null
                           });
                         }}
                         data-testid="button-cancel-edit-combo"
