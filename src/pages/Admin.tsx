@@ -51,8 +51,15 @@ export default function Admin() {
   // Combos
   const [combos, setCombos] = useState<any[]>([]);
   const [comboForm, setComboForm] = useState({
-    title: '', description: '', global_odds: '', stake: '', access_tier: 'free', match_date: '',
-    selectedPronoIds: [] as string[], couponImage: null as File | null
+    title: '', 
+    description: '', 
+    coupon_code: '',
+    global_odds: '', 
+    stake: '10', 
+    potential_win: '',
+    access_tier: 'free', 
+    match_date: '',
+    couponImage: null as File | null
   });
   const [editingCombo, setEditingCombo] = useState<any>(null);
   const [isComboDialogOpen, setIsComboDialogOpen] = useState(false);
@@ -63,7 +70,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (activeTab === 'pronos' && isAdmin) loadPronos();
-    if (activeTab === 'combos' && isAdmin) { loadCombos(); loadPronos(); } // Charger combos + pronos pour sélection
+    if (activeTab === 'combos' && isAdmin) loadCombos();
     if (activeTab === 'users' && isAdmin) loadUsers();
     if (activeTab === 'payments' && isAdmin) loadPayments();
   }, [activeTab, isAdmin]);
@@ -538,19 +545,21 @@ export default function Admin() {
 
   const handleCreateCombo = async () => {
     try {
-      if (!comboForm.title || !comboForm.global_odds || !comboForm.match_date) {
+      // Validation des champs obligatoires
+      if (!comboForm.title || !comboForm.global_odds || !comboForm.stake || !comboForm.match_date) {
         toast({ 
           title: 'Validation', 
-          description: 'Veuillez remplir tous les champs requis (titre, cote, date).', 
+          description: 'Veuillez remplir tous les champs requis (titre, cote, mise, date).', 
           variant: 'destructive' 
         });
         return;
       }
 
-      if (comboForm.selectedPronoIds.length === 0) {
+      // Image du coupon obligatoire
+      if (!comboForm.couponImage) {
         toast({ 
           title: 'Validation', 
-          description: 'Veuillez sélectionner au moins un prono pour le combo.', 
+          description: 'L\'image du coupon est obligatoire.', 
           variant: 'destructive' 
         });
         return;
@@ -558,29 +567,35 @@ export default function Admin() {
 
       setLoading(true);
 
-      // Créer le combo avec upload d'image optionnel
+      // Calculer le gain potentiel
+      const stake = parseFloat(comboForm.stake);
+      const odds = parseFloat(comboForm.global_odds);
+      const potentialWin = stake * odds;
+
+      // Créer le combo avec upload d'image
       const { data } = await supabaseComboService.createCombo({
         title: comboForm.title,
-        description: comboForm.description,
-        global_odds: parseFloat(comboForm.global_odds),
-        stake: parseFloat(comboForm.stake) || 0,
-        potential_win: parseFloat(comboForm.stake || '0') * parseFloat(comboForm.global_odds),
+        description: comboForm.description || undefined,
+        coupon_code: comboForm.coupon_code || undefined,
+        global_odds: odds,
+        stake: stake,
+        potential_win: potentialWin,
         access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
         match_date: comboForm.match_date,
-        pronoIds: comboForm.selectedPronoIds,
-        couponImage: comboForm.couponImage || undefined
+        couponImage: comboForm.couponImage
       });
 
       toast({ 
         title: 'Succès ✓', 
-        description: `Combo "${comboForm.title}" créé avec succès!` 
+        description: `Combo "${comboForm.title}" créé avec succès! Gain potentiel: ${potentialWin.toFixed(2)}€` 
       });
 
       // Réinitialiser le formulaire
       setComboForm({
-        title: '', description: '', global_odds: '', stake: '', 
+        title: '', description: '', coupon_code: '',
+        global_odds: '', stake: '10', potential_win: '',
         access_tier: 'free', match_date: '',
-        selectedPronoIds: [], couponImage: null
+        couponImage: null
       });
 
       // Recharger la liste des combos
@@ -602,11 +617,12 @@ export default function Admin() {
     setComboForm({
       title: combo.title,
       description: combo.description || '',
+      coupon_code: combo.coupon_code || '',
       global_odds: combo.global_odds.toString(),
-      stake: combo.stake?.toString() || '',
+      stake: combo.stake?.toString() || '10',
+      potential_win: combo.potential_win?.toString() || '',
       access_tier: combo.access_tier,
       match_date: combo.match_date ? new Date(combo.match_date).toISOString().slice(0, 16) : '',
-      selectedPronoIds: [], // Ne pas précharger les pronos sélectionnés (complexe avec la liaison)
       couponImage: null
     });
     setIsComboDialogOpen(true);
@@ -616,10 +632,10 @@ export default function Admin() {
     if (!editingCombo) return;
 
     try {
-      if (!comboForm.title || !comboForm.global_odds || !comboForm.match_date) {
+      if (!comboForm.title || !comboForm.global_odds || !comboForm.stake || !comboForm.match_date) {
         toast({ 
           title: 'Validation', 
-          description: 'Veuillez remplir tous les champs requis (titre, cote, date).', 
+          description: 'Veuillez remplir tous les champs requis (titre, cote, mise, date).', 
           variant: 'destructive' 
         });
         return;
@@ -627,12 +643,18 @@ export default function Admin() {
 
       setLoading(true);
 
+      // Calculer le gain potentiel
+      const stake = parseFloat(comboForm.stake);
+      const odds = parseFloat(comboForm.global_odds);
+      const potentialWin = stake * odds;
+
       await supabaseComboService.updateCombo(editingCombo.id, {
         title: comboForm.title,
-        description: comboForm.description,
-        global_odds: parseFloat(comboForm.global_odds),
-        stake: parseFloat(comboForm.stake) || 0,
-        potential_win: parseFloat(comboForm.stake || '0') * parseFloat(comboForm.global_odds),
+        description: comboForm.description || undefined,
+        coupon_code: comboForm.coupon_code || undefined,
+        global_odds: odds,
+        stake: stake,
+        potential_win: potentialWin,
         access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
         match_date: comboForm.match_date,
         couponImage: comboForm.couponImage || undefined
@@ -640,15 +662,16 @@ export default function Admin() {
 
       toast({ 
         title: 'Succès ✓', 
-        description: `Combo "${comboForm.title}" mis à jour!` 
+        description: `Combo "${comboForm.title}" mis à jour! Gain potentiel: ${potentialWin.toFixed(2)}€` 
       });
 
       setIsComboDialogOpen(false);
       setEditingCombo(null);
       setComboForm({
-        title: '', description: '', global_odds: '', stake: '', 
+        title: '', description: '', coupon_code: '',
+        global_odds: '', stake: '10', potential_win: '',
         access_tier: 'free', match_date: '',
-        selectedPronoIds: [], couponImage: null
+        couponImage: null
       });
       loadCombos();
     } catch (error: any) {
@@ -1236,8 +1259,8 @@ export default function Admin() {
                 <CardTitle>{editingCombo ? 'Modifier le Paris Combiné' : 'Créer un Paris Combiné'}</CardTitle>
                 <CardDescription>
                   {editingCombo 
-                    ? 'Modifiez les informations du combo (note: vous ne pouvez pas changer les pronos liés après création)' 
-                    : 'Sélectionnez plusieurs pronos pour créer un combo'}
+                    ? 'Modifiez les informations du combo et remplacez l\'image si nécessaire' 
+                    : 'Uploadez une image de coupon de pari avec tous les matchs'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
