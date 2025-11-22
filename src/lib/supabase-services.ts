@@ -435,6 +435,7 @@ export const supabaseAdminService = {
   submitPayment: async (paymentData: {
     userId: string;
     amount: number;
+    plan: 'basic' | 'pro' | 'vip'; // Plan d'abonnement associé
     method: 'crypto' | 'mobile_money' | 'bank_transfer';
     cryptoAddress?: string;
     cryptoTxHash?: string;
@@ -444,6 +445,11 @@ export const supabaseAdminService = {
     proofFile?: File;
   }) => {
     try {
+      // Validation du plan
+      if (!paymentData.plan || !['basic', 'pro', 'vip'].includes(paymentData.plan)) {
+        throw new Error('Plan d\'abonnement invalide');
+      }
+
       let proofImageUrl: string | null = null;
 
       // Upload proof image to Supabase Storage if provided
@@ -472,12 +478,13 @@ export const supabaseAdminService = {
         proofImageUrl = publicUrl;
       }
 
-      // Create payment record
+      // Create payment record avec le plan
       const { data, error } = await supabase
         .from('payments')
         .insert([{
           user_id: paymentData.userId,
           amount: paymentData.amount,
+          plan: paymentData.plan, // IMPORTANT: Enregistrer le plan choisi
           currency: 'EUR',
           method: paymentData.method,
           crypto_address: paymentData.cryptoAddress,

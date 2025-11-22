@@ -213,23 +213,123 @@ export default function Admin() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      // 1. Récupérer les détails du paiement
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('id', paymentId)
+        .single();
+
+      if (paymentError || !payment) {
+        throw new Error('Paiement introuvable');
+      }
+
+      // Validation: Vérifier que le plan est défini
+      if (!payment.plan || !['basic', 'pro', 'vip'].includes(payment.plan)) {
+        throw new Error('Le paiement ne contient pas de plan d\'abonnement valide');
+      }
+
+      // 2. Vérifier si l'utilisateur a déjà un abonnement
+      const now = new Date();
+      const { data: existingSubscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', payment.user_id)
+        .single();
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (existingSubscription && existingSubscription.status === 'active') {
+        // L'utilisateur a déjà un abonnement actif
+        const currentEndDate = new Date(existingSubscription.current_period_end);
+        
+        // Si l'abonnement actuel a encore du temps restant, on prolonge à partir de sa fin
+        if (currentEndDate > now) {
+          startDate = currentEndDate; // Commencer après la fin de l'abonnement actuel
+          endDate = new Date(currentEndDate);
+          endDate.setMonth(endDate.getMonth() + 1); // +1 mois à partir de la fin actuelle
+        } else {
+          // L'abonnement est expiré, repartir de maintenant
+          startDate = now;
+          endDate = new Date(now);
+          endDate.setMonth(endDate.getMonth() + 1);
+        }
+
+        // Mettre à jour l'abonnement existant
+        const { error: updateSubError } = await supabase
+          .from('subscriptions')
+          .update({
+            plan: payment.plan, // Permettre l'upgrade/downgrade
+            status: 'active',
+            current_period_start: startDate.toISOString(),
+            current_period_end: endDate.toISOString(),
+            cancel_at_period_end: false
+          })
+          .eq('user_id', payment.user_id);
+
+        if (updateSubError) throw updateSubError;
+      } else {
+        // Pas d'abonnement actif, créer un nouveau
+        startDate = now;
+        endDate = new Date(now);
+        endDate.setMonth(endDate.getMonth() + 1);
+
+        const { error: createSubError } = await supabase
+          .from('subscriptions')
+          .insert([{
+            user_id: payment.user_id,
+            plan: payment.plan,
+            status: 'active',
+            current_period_start: startDate.toISOString(),
+            current_period_end: endDate.toISOString(),
+            cancel_at_period_end: false
+          }]);
+
+        if (createSubError) throw createSubError;
+      }
+
+      // 4. Créer une transaction pour tracer le paiement
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert([{
+          user_id: payment.user_id,
+          type: 'payment',
+          amount: payment.amount,
+          status: 'completed',
+          description: `Paiement pour abonnement ${payment.plan.toUpperCase()}`
+        }]);
+
+      if (transactionError) {
+        console.error('Warning: Transaction creation failed:', transactionError);
+        // Ne pas bloquer l'approbation si la transaction échoue
+      }
+
+      // 5. Approuver le paiement
+      const { error: approveError } = await supabase
         .from('payments')
         .update({
           status: 'approved',
           processed_by: user.id,
-          processed_at: new Date().toISOString()
+          processed_at: now.toISOString()
         })
         .eq('id', paymentId);
 
-      if (error) throw error;
+      if (approveError) throw approveError;
 
-      toast({ title: 'Succès', description: 'Paiement approuvé avec succès.' });
+      toast({ 
+        title: 'Succès', 
+        description: `Paiement approuvé et abonnement ${payment.plan.toUpperCase()} activé avec succès.` 
+      });
       loadPayments();
       setIsPaymentDialogOpen(false);
     } catch (error) {
       console.error('Error approving payment:', error);
-      toast({ title: 'Erreur', description: 'Impossible d\'approuver le paiement.', variant: 'destructive' });
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible d\'approuver le paiement et d\'activer l\'abonnement.', 
+        variant: 'destructive' 
+      });
     }
   };
 

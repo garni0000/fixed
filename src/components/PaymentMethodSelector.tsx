@@ -84,10 +84,11 @@ export default function PaymentMethodSelector({
         return;
       }
 
-      // Submit payment to Supabase
+      // Submit payment to Supabase avec le plan sélectionné
       await supabaseAdminService.submitPayment({
         userId: user.id,
         amount: parseFloat(selectedPlan.price),
+        plan: selectedPlan.id as 'basic' | 'pro' | 'vip', // Plan d'abonnement choisi
         method: paymentMethod as 'crypto' | 'mobile_money',
         cryptoAddress: paymentMethod === 'crypto' ? cryptoAddress : undefined,
         cryptoTxHash: paymentMethod === 'crypto' ? cryptoTxHash : undefined,
