@@ -538,10 +538,19 @@ export default function Admin() {
 
   const handleCreateCombo = async () => {
     try {
-      if (!comboForm.title || !comboForm.global_odds || comboForm.selectedPronoIds.length === 0) {
+      if (!comboForm.title || !comboForm.global_odds || !comboForm.match_date) {
         toast({ 
           title: 'Validation', 
-          description: 'Veuillez remplir tous les champs requis et sélectionner au moins un prono.', 
+          description: 'Veuillez remplir tous les champs requis (titre, cote, date).', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      if (comboForm.selectedPronoIds.length === 0) {
+        toast({ 
+          title: 'Validation', 
+          description: 'Veuillez sélectionner au moins un prono pour le combo.', 
           variant: 'destructive' 
         });
         return;
@@ -557,7 +566,7 @@ export default function Admin() {
         stake: parseFloat(comboForm.stake) || 0,
         potential_win: parseFloat(comboForm.stake || '0') * parseFloat(comboForm.global_odds),
         access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
-        match_date: comboForm.match_date || new Date().toISOString(),
+        match_date: comboForm.match_date,
         pronoIds: comboForm.selectedPronoIds,
         couponImage: comboForm.couponImage || undefined
       });
@@ -585,6 +594,110 @@ export default function Admin() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditCombo = (combo: any) => {
+    setEditingCombo(combo);
+    setComboForm({
+      title: combo.title,
+      description: combo.description || '',
+      global_odds: combo.global_odds.toString(),
+      stake: combo.stake?.toString() || '',
+      access_tier: combo.access_tier,
+      match_date: combo.match_date ? new Date(combo.match_date).toISOString().slice(0, 16) : '',
+      selectedPronoIds: [], // Ne pas précharger les pronos sélectionnés (complexe avec la liaison)
+      couponImage: null
+    });
+    setIsComboDialogOpen(true);
+  };
+
+  const handleUpdateCombo = async () => {
+    if (!editingCombo) return;
+
+    try {
+      if (!comboForm.title || !comboForm.global_odds || !comboForm.match_date) {
+        toast({ 
+          title: 'Validation', 
+          description: 'Veuillez remplir tous les champs requis (titre, cote, date).', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      await supabaseComboService.updateCombo(editingCombo.id, {
+        title: comboForm.title,
+        description: comboForm.description,
+        global_odds: parseFloat(comboForm.global_odds),
+        stake: parseFloat(comboForm.stake) || 0,
+        potential_win: parseFloat(comboForm.stake || '0') * parseFloat(comboForm.global_odds),
+        access_tier: comboForm.access_tier as 'free' | 'basic' | 'pro' | 'vip',
+        match_date: comboForm.match_date,
+        couponImage: comboForm.couponImage || undefined
+      });
+
+      toast({ 
+        title: 'Succès ✓', 
+        description: `Combo "${comboForm.title}" mis à jour!` 
+      });
+
+      setIsComboDialogOpen(false);
+      setEditingCombo(null);
+      setComboForm({
+        title: '', description: '', global_odds: '', stake: '', 
+        access_tier: 'free', match_date: '',
+        selectedPronoIds: [], couponImage: null
+      });
+      loadCombos();
+    } catch (error: any) {
+      console.error('Error updating combo:', error);
+      toast({ 
+        title: 'Erreur', 
+        description: error.message || 'Impossible de mettre à jour le combo.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCombo = async (id: string, title: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le combo "${title}" ?`)) return;
+
+    try {
+      await supabaseComboService.deleteCombo(id);
+      toast({ 
+        title: 'Succès ✓', 
+        description: `Combo "${title}" supprimé avec succès!` 
+      });
+      loadCombos();
+    } catch (error: any) {
+      console.error('Error deleting combo:', error);
+      toast({ 
+        title: 'Erreur', 
+        description: error.message || 'Impossible de supprimer le combo.', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
+  const handleUpdateComboStatus = async (id: string, newStatus: 'pending' | 'won' | 'lost') => {
+    try {
+      await supabaseComboService.updateCombo(id, { status: newStatus });
+      toast({ 
+        title: 'Succès ✓', 
+        description: `Statut du combo mis à jour: ${newStatus === 'won' ? 'Gagné' : newStatus === 'lost' ? 'Perdu' : 'En cours'}` 
+      });
+      loadCombos();
+    } catch (error: any) {
+      console.error('Error updating combo status:', error);
+      toast({ 
+        title: 'Erreur', 
+        description: error.message || 'Impossible de mettre à jour le statut.', 
+        variant: 'destructive' 
+      });
     }
   };
 
@@ -1120,8 +1233,12 @@ export default function Admin() {
           <TabsContent value="combos" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Créer un Paris Combiné</CardTitle>
-                <CardDescription>Sélectionnez plusieurs pronos pour créer un combo</CardDescription>
+                <CardTitle>{editingCombo ? 'Modifier le Paris Combiné' : 'Créer un Paris Combiné'}</CardTitle>
+                <CardDescription>
+                  {editingCombo 
+                    ? 'Modifiez les informations du combo (note: vous ne pouvez pas changer les pronos liés après création)' 
+                    : 'Sélectionnez plusieurs pronos pour créer un combo'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
@@ -1213,49 +1330,78 @@ export default function Admin() {
                     />
                   </div>
 
-                  <div>
-                    <Label>Sélectionner les Pronos à Combiner</Label>
-                    <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
-                      {pronos.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Aucun prono disponible</p>
-                      ) : (
-                        pronos.map((prono) => (
-                          <div key={prono.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`prono-${prono.id}`}
-                              checked={comboForm.selectedPronoIds.includes(prono.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setComboForm({ ...comboForm, selectedPronoIds: [...comboForm.selectedPronoIds, prono.id] });
-                                } else {
-                                  setComboForm({ ...comboForm, selectedPronoIds: comboForm.selectedPronoIds.filter(id => id !== prono.id) });
-                                }
-                              }}
-                              data-testid={`checkbox-prono-${prono.id}`}
-                            />
-                            <label
-                              htmlFor={`prono-${prono.id}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {prono.title} - {prono.home_team} vs {prono.away_team} @ {prono.odd}
-                            </label>
-                          </div>
-                        ))
-                      )}
+                  {!editingCombo && (
+                    <div>
+                      <Label>Sélectionner les Pronos à Combiner</Label>
+                      <div className="border rounded-md p-4 max-h-64 overflow-y-auto space-y-2">
+                        {pronos.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Aucun prono disponible</p>
+                        ) : (
+                          pronos.map((prono) => (
+                            <div key={prono.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`prono-${prono.id}`}
+                                checked={comboForm.selectedPronoIds.includes(prono.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setComboForm({ ...comboForm, selectedPronoIds: [...comboForm.selectedPronoIds, prono.id] });
+                                  } else {
+                                    setComboForm({ ...comboForm, selectedPronoIds: comboForm.selectedPronoIds.filter(id => id !== prono.id) });
+                                  }
+                                }}
+                                data-testid={`checkbox-prono-${prono.id}`}
+                              />
+                              <label
+                                htmlFor={`prono-${prono.id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {prono.title} - {prono.home_team} vs {prono.away_team} @ {prono.odd}
+                              </label>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {comboForm.selectedPronoIds.length} prono(s) sélectionné(s)
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {comboForm.selectedPronoIds.length} prono(s) sélectionné(s)
-                    </p>
-                  </div>
+                  )}
 
-                  <Button
-                    onClick={handleCreateCombo}
-                    disabled={!comboForm.title || !comboForm.global_odds || comboForm.selectedPronoIds.length === 0}
-                    data-testid="button-create-combo"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Créer le Combo
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={editingCombo ? handleUpdateCombo : handleCreateCombo}
+                      disabled={!comboForm.title || !comboForm.global_odds || !comboForm.match_date || (!editingCombo && comboForm.selectedPronoIds.length === 0)}
+                      data-testid={editingCombo ? "button-update-combo" : "button-create-combo"}
+                    >
+                      {editingCombo ? (
+                        <>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Mettre à jour
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Créer le Combo
+                        </>
+                      )}
+                    </Button>
+                    {editingCombo && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setEditingCombo(null);
+                          setComboForm({
+                            title: '', description: '', global_odds: '', stake: '', 
+                            access_tier: 'free', match_date: '',
+                            selectedPronoIds: [], couponImage: null
+                          });
+                        }}
+                        data-testid="button-cancel-edit-combo"
+                      >
+                        Annuler
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1312,12 +1458,43 @@ export default function Admin() {
                             {combo.combo_pronos?.length || 0} pronos
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="ghost" disabled>
+                            <div className="flex gap-2 flex-wrap">
+                              <Select
+                                value={combo.status}
+                                onValueChange={(value) => handleUpdateComboStatus(combo.id, value as 'pending' | 'won' | 'lost')}
+                              >
+                                <SelectTrigger className="h-8 w-[100px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">En cours</SelectItem>
+                                  <SelectItem value="won">Gagné</SelectItem>
+                                  <SelectItem value="lost">Perdu</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleEditCombo(combo)}
+                                data-testid={`button-edit-combo-${combo.id}`}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" disabled>
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleDeleteCombo(combo.id, combo.title)}
+                                data-testid={`button-delete-combo-${combo.id}`}
+                              >
                                 <Trash2 className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => navigate(`/combos/${combo.id}`)}
+                                data-testid={`button-view-combo-${combo.id}`}
+                              >
+                                <ExternalLink className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
