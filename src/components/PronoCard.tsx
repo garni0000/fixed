@@ -3,13 +3,19 @@ import { TrendingUp, Shield, Zap, CheckCircle2, XCircle, Lock } from 'lucide-rea
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { getPronoTier, TIER_LABELS, TIER_COLORS } from '@/lib/tier-utils';
+import { supabasePronosService } from '@/lib/supabase-services';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 interface PronoCardProps {
   prono: any; // Objet prono complet
   isLocked?: boolean; // Si true, affiche l'aperçu partiel
+  showAdminActions?: boolean; // Si true, affiche les boutons pour marquer gagné/perdu (admin seulement)
 }
 
-const PronoCard = ({ prono, isLocked = false }: PronoCardProps) => {
+const PronoCard = ({ prono, isLocked = false, showAdminActions = false }: PronoCardProps) => {
+  const { toast } = useToast();
+  
   // Obtenir le niveau d'accès requis
   const pronoTier = prono.access_tier || 'free';
   
@@ -24,7 +30,28 @@ const PronoCard = ({ prono, isLocked = false }: PronoCardProps) => {
   const Icon = config.icon;
 
   // Déterminer le statut du résultat
-  const status = prono.prono_result || 'pending';
+  const status = prono.result || 'pending';
+
+  const handleUpdateResult = async (result: 'won' | 'lost') => {
+    try {
+      await supabasePronosService.updatePronoResult(prono.id, result);
+      
+      // Invalider le cache pour rafraîchir les données
+      queryClient.invalidateQueries({ queryKey: ['/api/pronos'] });
+      
+      toast({
+        title: 'Résultat mis à jour',
+        description: `Le prono a été marqué comme ${result === 'won' ? 'GAGNÉ' : 'PERDU'}`,
+      });
+    } catch (error) {
+      console.error('Error updating prono result:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le résultat',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div 
@@ -123,6 +150,30 @@ const PronoCard = ({ prono, isLocked = false }: PronoCardProps) => {
               {prono.result && <span className="ml-auto">{prono.result}</span>}
             </>
           )}
+        </div>
+      )}
+
+      {/* Boutons admin pour marquer le résultat */}
+      {showAdminActions && !isLocked && status === 'pending' && (
+        <div className="flex gap-2 mb-3">
+          <Button
+            className="flex-1"
+            variant="default"
+            onClick={() => handleUpdateResult('won')}
+            data-testid={`button-mark-won-${prono.id}`}
+          >
+            <CheckCircle2 size={16} className="mr-2" />
+            Gagné
+          </Button>
+          <Button
+            className="flex-1"
+            variant="destructive"
+            onClick={() => handleUpdateResult('lost')}
+            data-testid={`button-mark-lost-${prono.id}`}
+          >
+            <XCircle size={16} className="mr-2" />
+            Perdu
+          </Button>
         </div>
       )}
 

@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { getUserTier, canAccessProno } from '@/lib/tier-utils';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 const PronosBeforeYesterday = () => {
   const beforeYesterday = new Date(Date.now() - 172800000);
   const beforeYesterdayDate = beforeYesterday.toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(beforeYesterdayDate);
   const { user } = useSupabaseAuth();
+  const { isAdmin } = useIsAdmin();
 
   // Obtenir le tier de l'utilisateur
   const userTier = getUserTier(user?.subscription);
@@ -109,6 +111,7 @@ const PronosBeforeYesterday = () => {
                   key={prono.id}
                   prono={prono}
                   isLocked={isLocked}
+                  showAdminActions={isAdmin}
                 />
               );
             })}

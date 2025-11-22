@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Trophy, Target, TrendingUp, Shield, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
@@ -9,12 +10,20 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
 
 const Index = () => {
+  const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   const { data: pronos, isLoading } = usePronos(today);
-  const { user } = useSupabaseAuth();
+  const { user, isLoading: authLoading } = useSupabaseAuth();
   
   // Obtenir le tier de l'utilisateur
   const userTier = getUserTier(user?.subscription);
+
+  // Rediriger vers le dashboard si l'utilisateur est connecté
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col">

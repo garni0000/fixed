@@ -181,6 +181,24 @@ export const supabasePronosService = {
       throw error;
     }
   },
+
+  // Admin: Update prono result (won/lost/pending/void)
+  updatePronoResult: async (id: string, result: 'won' | 'lost' | 'pending' | 'void') => {
+    try {
+      const { data, error } = await supabase
+        .from('pronos')
+        .update({ result })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data };
+    } catch (error) {
+      console.error('Error updating prono result:', error);
+      throw error;
+    }
+  },
 };
 
 // User Service
