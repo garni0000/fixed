@@ -5,8 +5,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 ## État Actuel (Migration complète vers Supabase)
 **Date de migration Firebase → Supabase**: 21 Novembre 2025  
-**Dernière mise à jour**: 21 Novembre 2025 - Système à 4 niveaux d'abonnement complet  
-**Statut**: ✅ Application 100% fonctionnelle avec système dual-field validé
+**Dernière mise à jour**: 22 Novembre 2025 - Activation automatique d'abonnement  
+**Statut**: ✅ Application 100% fonctionnelle avec système dual-field et activation auto
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
@@ -16,7 +16,49 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - Interface utilisateur complète avec Shadcn UI
 - Système de routing avec React Router
 - **Système dual-field COMPLET** : Séparation type de pari / niveau d'accès
+- **Activation automatique d'abonnement** : Soumission de paiement → Approbation admin → Activation
 - Toutes les dépendances installées
+
+### 💳 Système d'Activation Automatique des Abonnements
+**Date d'implémentation**: 22 Novembre 2025  
+**Statut**: ✅ Fonctionnel avec préservation du temps restant
+
+#### Flux Complet
+1. **Soumission du Paiement** (`PaymentMethodSelector`)
+   - Utilisateur sélectionne un plan (BASIC/PRO/VIP)
+   - Remplit le formulaire de paiement (crypto, mobile money, ou virement)
+   - Upload d'une preuve de paiement
+   - Le `plan` est automatiquement enregistré dans la table `payments`
+
+2. **Validation Admin** (`Admin.tsx`)
+   - Admin voit le paiement en attente avec le plan choisi
+   - Clique sur "Approuver"
+   - Système vérifie que le paiement contient un plan valide
+
+3. **Activation Intelligente**
+   - Si l'utilisateur n'a pas d'abonnement → Création d'un nouvel abonnement
+   - Si l'utilisateur a un abonnement actif avec temps restant → **Extension à partir de la fin actuelle**
+   - Si l'utilisateur a un abonnement expiré → Redémarrage à partir de maintenant
+   - Support des upgrades/downgrades de plan (BASIC→PRO→VIP)
+
+4. **Audit & Traçabilité**
+   - Création d'une transaction de type `payment` dans l'historique
+   - Mise à jour du statut du paiement à `approved`
+
+#### Exemple de Préservation du Temps Restant
+- Utilisateur a VIP jusqu'au 25 décembre (20 jours restants)
+- Il renouvelle son VIP aujourd'hui (5 décembre)
+- **Ancien système** : Abonnement du 5 déc au 5 jan (perte de 20 jours)
+- **Nouveau système** : Abonnement du 25 déc au 25 jan (préservation des 20 jours)
+
+#### Migration SQL
+**Fichier** : `supabase/migrations/20251122000000_add_plan_to_payments.sql`
+- Ajout de la colonne `plan` à la table `payments`
+- Valeurs possibles : `basic`, `pro`, `vip`
+- **IMPORTANT** : Cette migration doit être appliquée dans votre base Supabase
+
+#### Limitations Connues
+⚠️ **Atomicité transactionnelle** : Le flux d'approbation exécute 3 opérations séquentielles (update subscription, insert transaction, update payment) sans transaction PostgreSQL. En cas d'échec partiel, l'admin peut corriger manuellement. Pour une vraie atomicité, implémenter une fonction RPC PostgreSQL.
 
 ### 🎯 Architecture Dual-Field pour les Pronos - VALIDÉE PAR ARCHITECT
 Le système utilise **deux champs distincts** pour offrir flexibilité maximale :
