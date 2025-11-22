@@ -5,7 +5,7 @@ import PronoCard from '@/components/PronoCard';
 import { usePronos } from '@/hooks/usePronos';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { getUserTier, getPronoTier, canAccessProno } from '@/lib/tier-utils';
+import { getUserTier, canAccessProno } from '@/lib/tier-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -120,8 +120,8 @@ const Dashboard = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pronos?.map((prono: any) => {
-                const pronoTier = getPronoTier(prono.prono_type);
-                const isLocked = !canAccessProno(userTier, pronoTier);
+                // Utiliser access_tier pour le contrôle d'accès (pas prono_type)
+                const isLocked = !canAccessProno(userTier, prono.access_tier || 'free');
                 
                 return (
                   <PronoCard 
