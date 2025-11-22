@@ -45,61 +45,72 @@ const Dashboard = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+        {/* Accès Rapide - Navigation Mobile */}
+        <div className="mb-6">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
+            <button
+              onClick={() => navigate('/pronos/today')}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
+              data-testid="quick-access-pronos"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-xs font-medium">Pronos</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/combos')}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
+              data-testid="quick-access-combos"
+            >
+              <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-yellow-500" />
+              </div>
+              <span className="text-xs font-medium">Combos</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/pricing')}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
+              data-testid="quick-access-pricing"
+            >
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-green-500" />
+              </div>
+              <span className="text-xs font-medium">Offres</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/account')}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg hover-elevate active-elevate-2"
+              data-testid="quick-access-account"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-purple-500" />
+              </div>
+              <span className="text-xs font-medium">Compte</span>
+            </button>
+          </div>
+
+          {/* Bouton Admin - visible uniquement pour les admins */}
+          {user?.isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full mt-3 flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover-elevate active-elevate-2"
+              data-testid="quick-access-admin"
+            >
+              <Award className="h-5 w-5 text-red-500" />
+              <span className="text-sm font-semibold text-red-500">Panneau Admin</span>
+            </button>
+          )}
+        </div>
+
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
             Bienvenue, <span className="vip-gradient bg-clip-text text-transparent">{user?.firstName || 'Champion'}</span>
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">Voici votre tableau de bord VIP</p>
-        </div>
-
-        {/* Accès Rapide - Navigation Mobile */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Accès Rapide</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer overflow-visible"
-              onClick={() => navigate('/pronos/today')}
-              data-testid="quick-access-pronos"
-            >
-              <CardContent className="p-4 sm:p-6 text-center">
-                <Calendar className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 text-primary" />
-                <p className="font-semibold text-sm sm:text-base">Pronos du Jour</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer overflow-visible"
-              onClick={() => navigate('/combos')}
-              data-testid="quick-access-combos"
-            >
-              <CardContent className="p-4 sm:p-6 text-center">
-                <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 text-yellow-500" />
-                <p className="font-semibold text-sm sm:text-base">Combos VIP</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer overflow-visible"
-              onClick={() => navigate('/pricing')}
-              data-testid="quick-access-pricing"
-            >
-              <CardContent className="p-4 sm:p-6 text-center">
-                <CreditCard className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 text-green-500" />
-                <p className="font-semibold text-sm sm:text-base">Abonnements</p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="hover-elevate active-elevate-2 cursor-pointer overflow-visible"
-              onClick={() => navigate('/referral')}
-              data-testid="quick-access-referral"
-            >
-              <CardContent className="p-4 sm:p-6 text-center">
-                <Users className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 text-purple-500" />
-                <p className="font-semibold text-sm sm:text-base">Parrainage</p>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         {/* Stats Grid */}
