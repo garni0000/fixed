@@ -67,28 +67,39 @@ export default function PaymentMethodSelector({
           return;
         }
 
-        // VERSION DEMO : Enregistrer le paiement dans Supabase
-        // TODO: Intégrer la vraie API MoneyFusion avec credentials
-        
-        // Créer une transaction de paiement dans Supabase
-        await supabaseAdminService.submitPayment({
-          userId: user.id,
-          amount: parseFloat(selectedPlan.price),
-          plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
-          method: 'mobile_money', // Utiliser mobile_money pour l'instant
-          mobileNumber: mobileNumber,
-          notes: `Client: ${customerName} - Mobile Money Automatique (MoneyFusion)`,
+        // Appeler la fonction serverless pour initier le paiement MoneyFusion
+        const response = await fetch('/api/payment/initiate-moneyfusion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            amount: parseFloat(selectedPlan.price),
+            plan: selectedPlan.id,
+            phoneNumber: mobileNumber,
+            customerName: customerName,
+          }),
         });
 
-        toast({
-          title: "Paiement simulé",
-          description: "En production, vous serez redirigé vers MoneyFusion. Pour l'instant, votre demande est enregistrée.",
-        });
+        const data = await response.json();
 
-        // Simuler une redirection vers la page de callback
-        setTimeout(() => {
-          window.location.href = `/payment/callback?status=success&plan=${selectedPlan.id}`;
-        }, 1500);
+        if (data.success && data.paymentUrl) {
+          // Enregistrer le paiement en attente dans Supabase
+          await supabaseAdminService.submitPayment({
+            userId: user.id,
+            amount: parseFloat(selectedPlan.price),
+            plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
+            method: 'mobile_money',
+            mobileNumber: mobileNumber,
+            notes: `MoneyFusion Token: ${data.paymentToken}\nClient: ${customerName}\nPaiement en cours`,
+          });
+
+          // Rediriger vers la page de paiement MoneyFusion
+          window.location.href = data.paymentUrl;
+        } else {
+          throw new Error(data.error || 'Échec de l\'initiation du paiement');
+        }
         
         return;
       }

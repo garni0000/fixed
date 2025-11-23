@@ -13,26 +13,11 @@ export default function PaymentCallback() {
   const [message, setMessage] = useState('Vérification du paiement en cours...');
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const statusParam = searchParams.get('status');
-    const plan = searchParams.get('plan');
-
-    if (!statusParam) {
-      setStatus('error');
-      setMessage('Statut de paiement manquant');
-      return;
-    }
-
-    // Simuler une vérification
-    setTimeout(() => {
-      if (statusParam === 'success') {
-        setStatus('success');
-        setMessage(`Votre demande d'abonnement ${plan?.toUpperCase() || ''} a été enregistrée. Un administrateur validera votre paiement sous 24h maximum.`);
-      } else {
-        setStatus('error');
-        setMessage('Le paiement a échoué. Veuillez réessayer.');
-      }
-    }, 1500);
+    // MoneyFusion redirige l'utilisateur ici après le paiement
+    // Le webhook sera appelé automatiquement pour activer l'abonnement
+    
+    setStatus('success');
+    setMessage('Votre paiement est en cours de traitement. Votre abonnement sera activé automatiquement dès confirmation du paiement (généralement sous quelques minutes).');
   }, [location]);
 
   return (
