@@ -14,19 +14,25 @@ export default function PaymentCallback() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const paymentId = searchParams.get('paymentId');
+    const statusParam = searchParams.get('status');
+    const plan = searchParams.get('plan');
 
-    if (!paymentId) {
+    if (!statusParam) {
       setStatus('error');
-      setMessage('Identifiant de paiement manquant');
+      setMessage('Statut de paiement manquant');
       return;
     }
 
-    // Simuler une vérification (en prod, vérifier via l'API)
+    // Simuler une vérification
     setTimeout(() => {
-      setStatus('success');
-      setMessage('Votre paiement a été traité avec succès ! Votre abonnement sera activé sous peu.');
-    }, 2000);
+      if (statusParam === 'success') {
+        setStatus('success');
+        setMessage(`Votre demande d'abonnement ${plan?.toUpperCase() || ''} a été enregistrée. Un administrateur validera votre paiement sous 24h maximum.`);
+      } else {
+        setStatus('error');
+        setMessage('Le paiement a échoué. Veuillez réessayer.');
+      }
+    }, 1500);
   }, [location]);
 
   return (

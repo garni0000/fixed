@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabaseAdminService } from '@/lib/supabase-services';
-import axios from 'axios';
 
 interface Plan {
   id: string;
@@ -68,21 +67,29 @@ export default function PaymentMethodSelector({
           return;
         }
 
-        // Appeler l'API backend pour initier le paiement MoneyFusion
-        const response = await axios.post('/api/payment/moneyfusion/initiate', {
+        // VERSION DEMO : Enregistrer le paiement dans Supabase
+        // TODO: Intégrer la vraie API MoneyFusion avec credentials
+        
+        // Créer une transaction de paiement dans Supabase
+        await supabaseAdminService.submitPayment({
           userId: user.id,
           amount: parseFloat(selectedPlan.price),
-          plan: selectedPlan.id,
-          phoneNumber: mobileNumber,
-          customerName: customerName,
+          plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
+          method: 'mobile_money', // Utiliser mobile_money pour l'instant
+          mobileNumber: mobileNumber,
+          notes: `Client: ${customerName} - Mobile Money Automatique (MoneyFusion)`,
         });
 
-        if (response.data.success) {
-          // Rediriger vers la page de paiement MoneyFusion
-          window.location.href = response.data.paymentUrl;
-        } else {
-          throw new Error('Failed to initiate payment');
-        }
+        toast({
+          title: "Paiement simulé",
+          description: "En production, vous serez redirigé vers MoneyFusion. Pour l'instant, votre demande est enregistrée.",
+        });
+
+        // Simuler une redirection vers la page de callback
+        setTimeout(() => {
+          window.location.href = `/payment/callback?status=success&plan=${selectedPlan.id}`;
+        }, 1500);
+        
         return;
       }
 

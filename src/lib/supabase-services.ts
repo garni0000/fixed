@@ -61,7 +61,7 @@ export interface Payment {
   amount: number;
   currency?: string; // Default: 'EUR'
   plan: 'basic' | 'pro' | 'vip'; // Plan d'abonnement associé au paiement
-  method: 'crypto' | 'mobile_money' | 'bank_transfer';
+  method: 'crypto' | 'mobile_money' | 'moneyfusion_auto' | 'bank_transfer';
   crypto_address?: string;
   crypto_tx_hash?: string;
   mobile_number?: string;
