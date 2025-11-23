@@ -68,37 +68,70 @@ export default function PaymentMethodSelector({
         }
 
         // Appeler la fonction serverless pour initier le paiement MoneyFusion
-        const response = await fetch('/api/payment/initiate-moneyfusion', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            amount: parseFloat(selectedPlan.price),
-            plan: selectedPlan.id,
-            phoneNumber: mobileNumber,
-            customerName: customerName,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success && data.paymentUrl) {
-          // Enregistrer le paiement en attente dans Supabase
-          await supabaseAdminService.submitPayment({
-            userId: user.id,
-            amount: parseFloat(selectedPlan.price),
-            plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
-            method: 'mobile_money',
-            mobileNumber: mobileNumber,
-            notes: `MoneyFusion Token: ${data.paymentToken}\nClient: ${customerName}\nPaiement en cours`,
+        try {
+          const response = await fetch('/api/payment/initiate-moneyfusion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              amount: parseFloat(selectedPlan.price),
+              plan: selectedPlan.id,
+              phoneNumber: mobileNumber,
+              customerName: customerName,
+            }),
           });
 
-          // Rediriger vers la page de paiement MoneyFusion
-          window.location.href = data.paymentUrl;
-        } else {
-          throw new Error(data.error || 'Échec de l\'initiation du paiement');
+          // Vérifier que la réponse contient du JSON
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // Serverless function pas disponible (développement local)
+            throw new Error('SERVERLESS_NOT_AVAILABLE');
+          }
+
+          const data = await response.json();
+
+          if (data.success && data.paymentUrl) {
+            // Enregistrer le paiement en attente dans Supabase
+            await supabaseAdminService.submitPayment({
+              userId: user.id,
+              amount: parseFloat(selectedPlan.price),
+              plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
+              method: 'mobile_money',
+              mobileNumber: mobileNumber,
+              notes: `MoneyFusion Token: ${data.paymentToken}\nClient: ${customerName}\nPaiement en cours`,
+            });
+
+            // Rediriger vers la page de paiement MoneyFusion
+            window.location.href = data.paymentUrl;
+          } else {
+            throw new Error(data.error || 'Échec de l\'initiation du paiement');
+          }
+        } catch (error: any) {
+          if (error.message === 'SERVERLESS_NOT_AVAILABLE') {
+            // Mode développement - Enregistrer pour approbation manuelle
+            await supabaseAdminService.submitPayment({
+              userId: user.id,
+              amount: parseFloat(selectedPlan.price),
+              plan: selectedPlan.id as 'basic' | 'pro' | 'vip',
+              method: 'mobile_money',
+              mobileNumber: mobileNumber,
+              notes: `Client: ${customerName}\nNuméro: ${mobileNumber}\n⚠️ MODE DEV - Les paiements automatiques MoneyFusion ne fonctionnent qu'en production sur Vercel`,
+            });
+
+            toast({
+              title: "⚠️ Mode Développement",
+              description: "Les paiements MoneyFusion automatiques ne fonctionnent qu'en production sur Vercel. Votre demande a été enregistrée pour approbation manuelle.",
+              duration: 8000,
+            });
+
+            setTimeout(() => {
+              window.location.href = '/payment/callback';
+            }, 2000);
+          } else {
+            throw error;
+          }
         }
         
         return;
