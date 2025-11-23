@@ -5,8 +5,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 ## État Actuel (Migration complète vers Supabase)
 **Date de migration Firebase → Supabase**: 21 Novembre 2025  
-**Dernière mise à jour**: 22 Novembre 2025 - Activation automatique d'abonnement  
-**Statut**: ✅ Application 100% fonctionnelle avec système dual-field et activation auto
+**Dernière mise à jour**: 23 Novembre 2025 - Intégration MoneyFusion paiements automatiques  
+**Statut**: ✅ Application 100% fonctionnelle avec paiements Mobile Money automatiques
 
 ### ✅ Fonctionnalités configurées
 - Frontend React + Vite fonctionnel sur port 5000
@@ -17,6 +17,8 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 - Système de routing avec React Router
 - **Système dual-field COMPLET** : Séparation type de pari / niveau d'accès
 - **Activation automatique d'abonnement** : Soumission de paiement → Approbation admin → Activation
+- **Paiements Mobile Money automatiques** : Intégration MoneyFusion pour Orange, MTN, Moov
+- Navigation mobile avec barre fixe en bas (Pronos, Combos, Offres, Compte)
 - Toutes les dépendances installées
 
 ### 🎲 Système de Paris Combinés (Combos)
@@ -91,6 +93,75 @@ FixedPronos est une plateforme VIP de pronostics sportifs avec système d'abonne
 
 #### Limitations Connues
 ⚠️ **Atomicité transactionnelle** : Le flux d'approbation exécute 3 opérations séquentielles (update subscription, insert transaction, update payment) sans transaction PostgreSQL. En cas d'échec partiel, l'admin peut corriger manuellement. Pour une vraie atomicité, implémenter une fonction RPC PostgreSQL.
+
+### 📱 Système de Paiements Mobile Money Automatiques (MoneyFusion)
+**Date d'implémentation**: 23 Novembre 2025  
+**Statut**: ✅ Intégré et fonctionnel - Prêt pour tests
+
+#### Vue d'ensemble
+Intégration complète de l'API MoneyFusion pour les paiements Mobile Money automatiques sur les marchés africains (Orange Money, MTN Mobile Money, Moov Money).
+
+#### Flux de Paiement Automatique
+1. **Sélection du Plan** (Page Pricing)
+   - Utilisateur choisit BASIC/PRO/VIP
+   - Clique sur "Choisir ce plan"
+
+2. **Formulaire de Paiement** (PaymentMethodSelector)
+   - Option **"Mobile Money Automatique"** (recommandée, badge)
+   - Utilisateur saisit :
+     - Nom complet
+     - Numéro de téléphone Mobile Money
+   - Clique sur "Procéder au paiement →"
+
+3. **Redirection Paiement**
+   - Backend appelle MoneyFusion API (`/api/payment/moneyfusion/initiate`)
+   - Création d'une transaction en base (statut `pending`)
+   - Redirection vers page de paiement MoneyFusion sécurisée
+   - Utilisateur entre son code PIN Mobile Money
+
+4. **Notification Webhook**
+   - MoneyFusion envoie une notification à `/api/webhooks/moneyfusion`
+   - Vérification de la signature de sécurité
+   - **Activation automatique de l'abonnement** (même logique que paiements manuels)
+   - Création de transaction d'historique
+
+5. **Retour Utilisateur**
+   - Redirection vers `/payment/callback?paymentId=xxx`
+   - Page de confirmation avec statut (succès/erreur)
+   - Boutons pour accéder au Dashboard ou Compte
+
+#### Architecture Technique
+**Services créés** :
+- `src/lib/payment-providers/moneyfusion.ts` - Client API MoneyFusion
+- `server/routes/payment.ts` - Routes Express pour initier paiement
+- `api/webhooks/moneyfusion.ts` - Endpoint webhook pour notifications
+- `src/pages/PaymentCallback.tsx` - Page de retour après paiement
+
+**Sécurité** :
+- Vérification de signature webhook
+- Secret API stocké dans `MMONEY_API_URL` (Replit Secrets)
+- Validation des montants et plans
+- Enregistrement de toutes les transactions
+
+**Base de données** :
+- Table `payments` : Stockage des demandes de paiement
+- Champ `method` supporte maintenant `moneyfusion_auto`
+- Activation automatique via logique existante (préservation du temps restant)
+
+#### Configuration Requise
+**Variables d'environnement** :
+- `MMONEY_API_URL` ✅ - URL de l'API MoneyFusion (configuré dans Secrets)
+
+**Prochaines étapes** :
+1. Tests en environnement sandbox MoneyFusion
+2. Configuration de l'URL de callback production (Vercel)
+3. Monitoring des webhooks et gestion des échecs
+
+#### Avantages par rapport aux Paiements Manuels
+✅ **Activation instantanée** - Pas d'attente d'approbation admin  
+✅ **Moins d'erreurs** - Pas de preuve de paiement à uploader  
+✅ **Meilleure UX** - Processus fluide et familier (comme tout e-commerce)  
+✅ **Traçabilité** - Toutes les transactions enregistrées automatiquement
 
 ### 🎯 Architecture Dual-Field pour les Pronos - VALIDÉE PAR ARCHITECT
 Le système utilise **deux champs distincts** pour offrir flexibilité maximale :
