@@ -1,7 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Autoriser uniquement les requêtes POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -119,8 +118,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
 
       const now = new Date();
-      let startDate: Date;
-      let endDate: Date;
+      let startDate;
+      let endDate;
 
       if (existingSubscription && existingSubscription.status === 'active') {
         // Prolonger l'abonnement existant
