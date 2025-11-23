@@ -24,7 +24,13 @@ The application uses Shadcn UI components built with Radix UI and Tailwind CSS, 
 - **API Services**: All API calls are directed through `src/lib/supabase-services.ts`, abstracting interactions with Supabase for pronos, user management, payments, and admin functions.
 - **Dual-Field System for Predictions**: Predictions are categorized by `prono_type` (e.g., safe, risk, vip) for risk assessment and `access_tier` (e.g., free, basic, pro, vip) for subscription-based content control. This system provides multi-level protection on both the frontend (filtering, blocking access, displaying reserved content messages) and the admin panel (independent selectors for type and tier).
 - **Automated Subscription Activation**: An intelligent system extends existing subscriptions, creates new ones, or reactivates expired ones based on payment approval, preserving remaining subscription time.
-- **Automated Mobile Money Payments**: Integration with MoneyFusion API for automatic payments (Orange, MTN, Moov Mobile Money) through a dedicated payment flow, webhooks for status updates, and secure transaction handling.
+- **Automated Mobile Money Payments**: **PRODUCTION-READY** integration with MoneyFusion API for automatic payments (Orange Money, MTN Mobile Money, Moov Money). Implementation includes:
+  - Vercel serverless function (`/api/payment/initiate-moneyfusion.ts`) for secure payment initiation
+  - Webhook handler (`/api/webhooks/moneyfusion.ts`) for real-time payment notifications
+  - Automatic subscription activation on payment confirmation
+  - Support for all MoneyFusion webhook events (pending/completed/cancelled)
+  - Secure API credentials stored in environment variables (never exposed to frontend)
+  - Test credentials configured: API URL = https://www.pay.moneyfusion.net/fixedapp/53c47152846ca6e2/pay/
 
 ### Feature Specifications
 - **Combined Bets (Combos)**: Supports combined bets with image coupons, linked pronos, and CRUD operations via Supabase services. Filtering by subscription level is intended.
