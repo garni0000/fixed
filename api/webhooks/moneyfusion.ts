@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({ message: 'Already processed' });
       }
 
-      // 2. Créer ou mettre à jour le paiement
+      // 2. Créer un nouveau paiement (sans écraser l'ancien)
       const paymentData = {
         user_id: userId,
         amount: Montant,
@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
-        .upsert(paymentData, { onConflict: 'user_id' })
+        .insert(paymentData)
         .select()
         .single();
 
