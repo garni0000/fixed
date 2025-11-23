@@ -18,6 +18,7 @@ import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import Combos from "./pages/Combos";
 import ComboDetail from "./pages/ComboDetail";
+import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/account" element={<Account />} />
           <Route path="/referral" element={<Referral />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

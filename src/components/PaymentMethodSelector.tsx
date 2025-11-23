@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Smartphone, Bitcoin, X, Upload } from 'lucide-react';
+import { Smartphone, Bitcoin, X, Upload, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabaseAdminService } from '@/lib/supabase-services';
+import axios from 'axios';
 
 interface Plan {
   id: string;
@@ -29,11 +31,12 @@ export default function PaymentMethodSelector({
   onPaymentComplete,
   onClose,
 }: PaymentMethodSelectorProps) {
-  const [paymentMethod, setPaymentMethod] = useState('crypto');
+  const [paymentMethod, setPaymentMethod] = useState('moneyfusion_auto');
   const [isProcessing, setIsProcessing] = useState(false);
   const [cryptoAddress, setCryptoAddress] = useState('');
   const [cryptoTxHash, setCryptoTxHash] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
+  const [customerName, setCustomerName] = useState('');
   const [mobileProvider, setMobileProvider] = useState('Orange Money');
   const [notes, setNotes] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -53,7 +56,37 @@ export default function PaymentMethodSelector({
     setIsProcessing(true);
 
     try {
-      // Validation
+      // Paiement automatique MoneyFusion
+      if (paymentMethod === 'moneyfusion_auto') {
+        if (!mobileNumber.trim() || !customerName.trim()) {
+          toast({
+            title: "Erreur",
+            description: "Veuillez remplir tous les champs requis",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        // Appeler l'API backend pour initier le paiement MoneyFusion
+        const response = await axios.post('/api/payment/moneyfusion/initiate', {
+          userId: user.id,
+          amount: parseFloat(selectedPlan.price),
+          plan: selectedPlan.id,
+          phoneNumber: mobileNumber,
+          customerName: customerName,
+        });
+
+        if (response.data.success) {
+          // Rediriger vers la page de paiement MoneyFusion
+          window.location.href = response.data.paymentUrl;
+        } else {
+          throw new Error('Failed to initiate payment');
+        }
+        return;
+      }
+
+      // Validation pour paiements manuels
       if (paymentMethod === 'crypto' && !cryptoAddress.trim()) {
         toast({
           title: "Erreur",
@@ -140,23 +173,36 @@ export default function PaymentMethodSelector({
             <Label className="text-base mb-4 block">Méthode de paiement</Label>
             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
               <div className="space-y-3">
+                {/* Mobile Money Automatique - MoneyFusion */}
+                <label className="flex items-center gap-4 p-4 border-2 border-primary rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                  <RadioGroupItem value="moneyfusion_auto" id="moneyfusion_auto" />
+                  <Zap className="w-6 h-6 text-primary" />
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      Mobile Money Automatique
+                      <Badge variant="default" className="text-xs">Recommandé</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Paiement instantané - Orange, MTN, Moov</div>
+                  </div>
+                </label>
+
                 {/* Crypto */}
                 <label className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-accent transition-colors">
                   <RadioGroupItem value="crypto" id="crypto" />
                   <Bitcoin className="w-6 h-6 text-primary" />
                   <div className="flex-1">
                     <div className="font-medium">Cryptomonnaies</div>
-                    <div className="text-sm text-muted-foreground">Bitcoin, USDT, Ethereum</div>
+                    <div className="text-sm text-muted-foreground">Bitcoin, USDT, Ethereum (Manuel)</div>
                   </div>
                 </label>
 
-                {/* Mobile Money */}
+                {/* Mobile Money Manuel */}
                 <label className="flex items-center gap-4 p-4 border rounded-lg cursor-pointer hover:bg-accent transition-colors">
                   <RadioGroupItem value="mobile_money" id="mobile_money" />
                   <Smartphone className="w-6 h-6 text-primary" />
                   <div className="flex-1">
-                    <div className="font-medium">Mobile Money</div>
-                    <div className="text-sm text-muted-foreground">Orange Money, MTN Mobile Money, Moov Money</div>
+                    <div className="font-medium">Mobile Money Manuel</div>
+                    <div className="text-sm text-muted-foreground">Orange, MTN, Moov (Envoi manuel + preuve)</div>
                   </div>
                 </label>
               </div>
@@ -166,6 +212,55 @@ export default function PaymentMethodSelector({
           <Separator />
 
           {/* Payment Details Form */}
+          {paymentMethod === 'moneyfusion_auto' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  <p className="font-semibold text-primary">Paiement Automatique</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Vous serez redirigé vers une page de paiement sécurisée. Votre abonnement sera activé automatiquement après confirmation du paiement.
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="customer-name">Votre nom complet *</Label>
+                <Input
+                  id="customer-name"
+                  placeholder="Ex: Jean Kouassi"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  data-testid="input-customer-name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phone-auto">Numéro de téléphone Mobile Money *</Label>
+                <Input
+                  id="phone-auto"
+                  placeholder="+225 XX XX XX XX XX"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  data-testid="input-phone-auto"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Le numéro qui effectuera le paiement (Orange, MTN, Moov)
+                </p>
+              </div>
+
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Montant à payer</span>
+                  <span className="font-bold text-lg text-primary">{selectedPlan.price}€</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Frais de transaction inclus • Activation instantanée
+                </p>
+              </div>
+            </div>
+          )}
+
           {paymentMethod === 'crypto' && (
             <div className="space-y-4">
               <div>
@@ -249,28 +344,30 @@ export default function PaymentMethodSelector({
             </div>
           )}
 
-          {/* Proof Upload */}
-          <div>
-            <Label htmlFor="proof" className="text-base mb-2 block">Preuve de paiement *</Label>
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Téléchargez une capture d'écran de votre paiement
-              </p>
-              <Input
-                id="proof"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                className="max-w-xs mx-auto"
-              />
-              {proofFile && (
-                <p className="text-xs text-green-600 mt-2">
-                  Fichier sélectionné: {proofFile.name}
+          {/* Proof Upload - Only for manual payments */}
+          {paymentMethod !== 'moneyfusion_auto' && (
+            <div>
+              <Label htmlFor="proof" className="text-base mb-2 block">Preuve de paiement *</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  Téléchargez une capture d'écran de votre paiement
                 </p>
-              )}
+                <Input
+                  id="proof"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  className="max-w-xs mx-auto"
+                />
+                {proofFile && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Fichier sélectionné: {proofFile.name}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Notes */}
           <div>
@@ -306,8 +403,11 @@ export default function PaymentMethodSelector({
               onClick={handlePayment}
               disabled={isProcessing}
               className="flex-1"
+              data-testid="button-confirm-payment"
             >
-              {isProcessing ? 'Traitement...' : 'Confirmer le paiement'}
+              {isProcessing ? 'Traitement...' : (
+                paymentMethod === 'moneyfusion_auto' ? 'Procéder au paiement →' : 'Confirmer le paiement'
+              )}
             </Button>
           </div>
 
