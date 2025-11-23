@@ -19,10 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Configuration MoneyFusion
     const apiUrl = process.env.MONEYFUSION_API_URL;
-    const apiKey = process.env.MONEYFUSION_API_KEY;
 
-    if (!apiUrl || !apiKey) {
-      console.error('MoneyFusion credentials not configured');
+    if (!apiUrl) {
+      console.error('MoneyFusion API URL not configured');
       return res.status(500).json({ 
         success: false, 
         error: 'Payment system not configured' 
@@ -30,11 +29,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Préparer les données de paiement selon la documentation MoneyFusion
+    const amountNumber = parseFloat(amount);
     const paymentData = {
-      totalPrice: parseFloat(amount),
+      totalPrice: amountNumber,
       article: [
         {
-          [`Abonnement ${plan.toUpperCase()} - FixedPronos`]: parseFloat(amount)
+          libelle: `Abonnement ${plan.toUpperCase()} - FixedPronos`,
+          prix: amountNumber
         }
       ],
       personal_Info: [
