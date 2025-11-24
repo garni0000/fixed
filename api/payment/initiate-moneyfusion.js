@@ -32,8 +32,8 @@ export default async function handler(req, res) {
       totalPrice: amountNumber,
       article: [
         {
-          libelle: `Abonnement ${plan.toUpperCase()} - FixedPronos`,
-          prix: amountNumber
+          nom: `Abonnement ${plan.toUpperCase()} - FixedPronos`,
+          montant: amountNumber
         }
       ],
       personal_Info: [
