@@ -59,6 +59,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    // Logger toute la réponse pour debugging
+    console.log('MoneyFusion API Response:', JSON.stringify(data, null, 2));
+    console.log('Response status:', response.status);
 
     // Vérifier la réponse
     if (data.statut && data.url && data.token) {
@@ -69,10 +73,15 @@ export default async function handler(req, res) {
         message: data.message
       });
     } else {
-      console.error('MoneyFusion API error:', data);
+      console.error('MoneyFusion API error:', {
+        status: response.status,
+        response: data,
+        sentData: paymentData
+      });
       return res.status(500).json({
         success: false,
-        error: 'Failed to create payment session'
+        error: 'Failed to create payment session',
+        details: data.message || data.error || 'Unknown error from MoneyFusion API'
       });
     }
 

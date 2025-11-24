@@ -106,7 +106,10 @@ export default function PaymentMethodSelector({
             // Rediriger vers la page de paiement MoneyFusion
             window.location.href = data.paymentUrl;
           } else {
-            throw new Error(data.error || 'Échec de l\'initiation du paiement');
+            // Afficher les détails de l'erreur de MoneyFusion
+            const errorMessage = data.details || data.error || 'Échec de l\'initiation du paiement';
+            console.error('MoneyFusion error details:', data);
+            throw new Error(errorMessage);
           }
         } catch (error: any) {
           if (error.message === 'SERVERLESS_NOT_AVAILABLE') {
